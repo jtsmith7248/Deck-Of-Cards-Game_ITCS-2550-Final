@@ -1,0 +1,106 @@
+#include <iostream>
+#include <shlwapi.h>	// To launch the web browser
+#include <string>
+#include <conio.h>
+#include "HttpClient.h"
+
+#pragma warning( push )
+#pragma warning(disable:26819)
+#include "json.hpp"
+#pragma warning( pop )
+using json = nlohmann::json;
+
+using namespace std;
+////////////////////////////////////////////////
+
+
+// Main user-defined class: parsing, sorting, and virtual functions happen here
+class DeckOfCards : public HttpClient
+{
+public:
+	{
+		struct DrawCard
+		{
+    string number;  // API refers to this as "value"
+    string suit;
+    string code;
+    
+    // Overload insertion "<<" operator
+		friend ostream& operator<<(ostream& osObject, const DrawCard& draw) {}
+	};
+
+  // Constructor
+  DeckOfCards() {}
+  
+  // Destructor
+	~DeckOfCards() {}
+
+	template<typename T>
+	void BubbleSort(bool ascending) {
+    // change bool name if necessary
+  }
+
+  // Get and return DrawCard suit
+  virtual DrawCard* GetSuits(const string s) {  // const?
+		//return Card.suit;
+	}
+  
+  // Get and return DrawCard number
+  virtual DrawCard* GetNumber() {   // const?
+		//return Card.number;
+  }
+
+	// uses the overloaded insertion "<<" operator in the DrawCard struct to accomplish the output stream of DeckOfCards class
+	friend ostream& operator<<(ostream& osObject, const DeckOfCards& dc) {}
+
+
+protected:
+	//takes in all the info from UnsplashClient API and fills a vector woth each individual char
+	void Data(const char arrData[], const unsigned int iSize)
+	{
+		//json parsed here
+		jsonData.insert(jsonData.end(), arrData, arrData + iSize);
+	}
+
+	// Parse the jsonData char vector, and fill all of the DrawCard objects with the requisite data using the nlohmann parser
+	void EndOfData() {
+    // Parse into struct here
+  };
+
+
+private:
+
+	//here we are deleteing all tyhe dynamically allocated memory, fist by stepping through each object in photos[], then deleting photos itself
+	//prevents data leaks - called from the destructor
+	//void DeleteMemory()
+	//{
+	//	//used to free all dynamically allocated memory when required before a new API call
+	//	for (int i = 0; i < photoCount; i++)
+	//	{
+	//		delete photos[i];
+	//	}
+	//	delete[] photos;
+	//}
+
+	vector<char> jsonData;
+	size_t cardsDealt = 1;  // Default is 1 card
+	DrawCard** Card;
+
+};
+
+////////////////////////////////////////////////////////////////////////////////
+///////////////    TO BE INSERTED ONCE ALL FILES ARE COMPLETE:   ///////////////
+////////////////////////////////////////////////////////////////////////////////
+
+// INSERT STRUCT COMPARESUITS
+
+// INSERT STRUCT COMPARENUMBERS
+
+// INSERT MINIGAME1 : Public DeckOfCards
+
+// INSERT MINIGAME2 : Public DeckOfCards
+
+// INSERT/WORK ON MAIN AFTER ALL FILES/FUNCTIONS ARE ADDED
+int main(int argc, char* argv[]) {
+  // create main using smaller functions instead of 
+}
