@@ -19,7 +19,7 @@ class DeckOfCards : public HttpClient
 {
 public:
 	struct DrawCard {
-   		string number;	// API refers to this as "value"
+   		string number;		// API refers to this as "value"
    		string suit;		// (S, C, D, H)
    		string code;		// For printing purposes
     
@@ -47,10 +47,19 @@ public:
   	virtual DrawCard* GetNumber() {   // const?
 		//return Card.number;
   	}
+	
+	// might be a void function instead with (DrawCard*, int) as parameters instead
+	// Think of this one like a "CreateHand" type of function
+	virtual DrawCard* DrawHand(int count) {
+		// retrieves number of cards needed and loops through
+	}
+	
+	// Uses overloaded insertion "<<" operator in DrawCard struct to stream output of DeckOfCards class
+	friend ostream& operator<<(ostream& osObject, const DeckOfCards& dc) {
+	}
 
-	// uses the overloaded insertion "<<" operator in the DrawCard struct to accomplish the output stream of DeckOfCards class
-	friend ostream& operator<<(ostream& osObject, const DeckOfCards& dc) {}
-
+	// Might use if needed for child class
+	//virtual void PrettyPrint() {} 
 
 protected:
 
