@@ -34,7 +34,7 @@ public:
 	~DeckOfCards() {}
 
 	template<typename T>
-	void BubbleSort(bool ascending) {
+	void BubbleSort(bool ascending) {	// Call in DrawCard* ?
     	// change bool name if necessary
   	}
 
