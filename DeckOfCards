@@ -18,16 +18,14 @@ using namespace std;
 class DeckOfCards : public HttpClient
 {
 public:
-	{
-		struct DrawCard
-		{
-    string number;  // API refers to this as "value"
-    string suit;
-    string code;
+struct DrawCard {
+   string number;	// API refers to this as "value"
+   string suit;		// (S, C, D, H)
+   string code;		// For printing purposes
     
-    // Overload insertion "<<" operator
-		friend ostream& operator<<(ostream& osObject, const DrawCard& draw) {}
-	};
+   // Overload insertion "<<" operator
+   friend ostream& operator<<(ostream& osObject, const DrawCard& draw) {}
+   };
 
   // Constructor
   DeckOfCards() {}
