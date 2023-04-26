@@ -18,41 +18,42 @@ using namespace std;
 class DeckOfCards : public HttpClient
 {
 public:
-struct DrawCard {
-   string number;	// API refers to this as "value"
-   string suit;		// (S, C, D, H)
-   string code;		// For printing purposes
+	struct DrawCard {
+   		string number;	// API refers to this as "value"
+   		string suit;		// (S, C, D, H)
+   		string code;		// For printing purposes
     
-   // Overload insertion "<<" operator
-   friend ostream& operator<<(ostream& osObject, const DrawCard& draw) {}
-   };
+   		// Overload insertion "<<" operator
+   		friend ostream& operator<<(ostream& osObject, const DrawCard& draw) {}
+   	};
 
-  // Constructor
-  DeckOfCards() {}
+  	// Constructor
+  	DeckOfCards() {}
   
-  // Destructor
+  	// Destructor
 	~DeckOfCards() {}
 
 	template<typename T>
 	void BubbleSort(bool ascending) {
-    // change bool name if necessary
-  }
+    	// change bool name if necessary
+  	}
 
-  // Get and return DrawCard suit
-  virtual DrawCard* GetSuits(const string s) {  // const?
+  	// Get and return DrawCard suit
+  	virtual DrawCard* GetSuits(const string s) {  // const?
 		//return Card.suit;
 	}
   
-  // Get and return DrawCard number
-  virtual DrawCard* GetNumber() {   // const?
+  	// Get and return DrawCard number
+  	virtual DrawCard* GetNumber() {   // const?
 		//return Card.number;
-  }
+  	}
 
 	// uses the overloaded insertion "<<" operator in the DrawCard struct to accomplish the output stream of DeckOfCards class
 	friend ostream& operator<<(ostream& osObject, const DeckOfCards& dc) {}
 
 
 protected:
+
 	//takes in all the info from UnsplashClient API and fills a vector woth each individual char
 	void Data(const char arrData[], const unsigned int iSize)
 	{
@@ -61,13 +62,12 @@ protected:
 	}
 
 	// Parse the jsonData char vector, and fill all of the DrawCard objects with the requisite data using the nlohmann parser
-	void EndOfData() {
-    // Parse into struct here
-  };
-
+	void EndOfData()
+	{
+    	// Parse into struct here
+  	};
 
 private:
-
 	//here we are deleteing all tyhe dynamically allocated memory, fist by stepping through each object in photos[], then deleting photos itself
 	//prevents data leaks - called from the destructor
 	//void DeleteMemory()
