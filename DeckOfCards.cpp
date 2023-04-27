@@ -24,7 +24,12 @@ public:
 		string code;		// For printing purposes
 
 		// Overload insertion "<<" operator
-		friend ostream& operator<<(ostream& osObject, const DrawCard& draw) {}
+		friend ostream& operator<<(ostream& osObject, const DrawCard& draw) 
+		{
+
+
+			return osObject;
+		}
 	};
 
 	// Constructor
@@ -33,10 +38,13 @@ public:
 	// Destructor
 	~DeckOfCards() {}
 
-	template<typename T>
-	void BubbleSort(bool ascending) {	// Call in DrawCard* ?
-		// change bool name if necessary
-	}
+	//UPDATE: Removed Bubblesort from DeckOfCards, it is only overloaded in HardMode (LOTD) and not in EasyMode (GG),
+	//so it doesn't need to be in the parent class to be overloaded
+
+		//template<typename T>
+		//void BubbleSort(bool ascending) {	// Call in DrawCard* ?
+		//	// change bool name if necessary
+		//}
 
 	// Get and return DrawCard suit
 	virtual DrawCard* GetSuits(const string s) {  // const?

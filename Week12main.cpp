@@ -386,202 +386,202 @@ struct CompareCreatedAt
 
 
 ////////////////////////////////////////////////
-int main(int argc, char* argv[])
-{
-	// Leave this, as it will tell you if you have any memory leaks.
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-
-	// See https://stackoverflow.com/questions/24708700/c-detect-when-user-presses-arrow-key
-	const int ARROW_UP	 = 72;
-	const int ARROW_DOWN = 80;
-	const int VIEW = 118;
-	const int EXTENDED_KEY = 224;
-	const int NEW = 110;
-
-	string queryTerm; //
-	int pageNum = 1;
-	int compSelection = 0; //0
-	int ascendingDescendingInput = 0; //0
-	int picSelection;
-	int continuationChoice;
-	bool runProgram = true;
-	bool noExtended = true;
-	bool newTermSearch = true;
-	bool breakSwitch = false;
-	bool grabURL = false;
-	bool ascendingBool;
-
-	//little entrance message
-	cout << "*********************************************************" << endl << endl;
-	cout << "Welcome To My Unsplash API App" << endl << endl;;
-	cout << "*********************************************************" << endl << endl;
-
-	//the whole program is one big loop that can eventually be exited
-	while (runProgram)
-	{
-		//if we are looking for a newSearchTerm, we get that and take a few more user inputs. This should obviously be true when the program first runs, 
-		//but as the user scrolls through new pages, they won't be looking for a new term, so this block is then skipped
-		if (newTermSearch)
-		{
-			cout << "Please Enter a Query Term Here: ";
-			cin >> queryTerm;
-			cout << endl;
-			//these loops prevent the user from entering invalid entries into the program. can only be exited when they make an allowed choice
-			while (compSelection != 1 && compSelection != 2)
-			{
-				cout << "Sort by Date Created [Enter 1] or Picture Area [Enter 2]: ";
-				cin >> compSelection;
-			}
-			cout << endl;
-			while (ascendingDescendingInput != 1 && ascendingDescendingInput != 2)
-			{
-				cout << "Sort Ascending [Enter 1] or Descending [Enter 2]: ";
-				cin >> ascendingDescendingInput;
-			}
-			cout << endl << endl;
-
-			//takes the 1 or 2 they entered coresponding to ascending/descending and converts it to a boolean var
-			ascendingBool = ascendingDescendingInput == 1 ? true : false;
-		}
-		
-		// An example use invoking an GET on the Unsplash API.
-		// Notice the query term and the page number.
-		// only use once per loop, create and destroy each iteration, each query should be a different unsplash client
-		
-		UnsplashClient uc;
-		uc.Connect("api.unsplash.com");
-		//my individual UnsplashClient API key is added
-		uc.SetAuthToken("Client-ID", "s17CxGFZrH782-tlJMRgpmVP9b4npi2IibLunn13c-4");
-		//queryTerm and pageNum sent to the API is dynamic
-		uc.Get("/search/photos", { {"query", queryTerm}, {"page", to_string(pageNum)} });
-
-		//User decides how they want data sorted here
-		if (compSelection == 1)
-			uc.BubbleSort<CompareCreatedAt>(ascendingBool);
-		else
-			uc.BubbleSort<CompareArea>(ascendingBool);
-
-		//output that data to the screen
-		cout << uc;
-
-		//use of GetTotalPages func to do just that 
-		cout << "------------- Page " << pageNum << " of " << uc.GetTotalPages() << " -------------" << endl << endl;
-
-		breakSwitch = false;
-		/*while (true)
-		{
-			auto input = _getch();
-			cin >> input;
-			cout << "INPUT: " << input << endl << endl;
-		}*/
-
-		//This structure uses _getch() to take keystrokes from the user and convert them into choices. I used many bool values to control what happens here, 
-		//and each is explained here, basically explaining what is happening overall:
-			//breakSwitch: controls the looping of the end of page user input. when a user reaches the end of a page, they have many options explained in
-				//line 486. If breakSwitch == false, we are NOT breaking out of this loop that repeats the _getch() switch statement. We stay within this loop
-				//for many reasons; namely if the user views an image and needs to be asked what to do next, if they try to see before the first page ot after
-				//the last, or if _getch() catches an extended key and not the user choice
-			//noExtended: this bool catches whether or not to ask the user for input. Added because when using the arrow keys on my machine, pressing any of
-				//the 4 arrow keys would send in two values: the extended key value (224) and then also the proper value; 72 for up, 80 for down. when the switch
-				//catches the extended key, we just set noExtended to true because the extended key WAS found, and we proceed to process the actual entry given by
-				//the user (ie ARROW_UP, etc). If anything except case EXTENDED_KEY is truggered, noExtended is set to true to ensure the user is given the input 
-				// statement
-			//newTermSearch: mentioned on line 422-423. When a user wants to see the previos/next page, they are NOT looking for a new search term, but they 
-				//are looking for the next array of results from the API, so we set this to false to skip over the inputs at the start of the main loop and just
-				//grab the infor from the API with the same search term but on the next/previous page. This is only set back to true when the user decides to make 
-				//a new search by entering 'n'
-			//runProgram: when this is true, which it is by default, the whole program runs. If the user enters a key not found by the switch structure, theyve
-				//decided to end the program, so we break out of the switch loop by changing breakSwitch, output a goodbye message, and come to the end of main()
-			//grabURL: when the user chooses to view an image and enters which array entry they want, this is set to true, and then at the end of the switch structure
-				//a new if structure is triggered that opens the given url in their default browser and we reset this back to false, until the user chooses to view
-				//another image 
-			
-		
-		while (!breakSwitch)
-		{
-			if (noExtended)
-				cout << "End of Data... Press Up/Down Arrow Keys to Paginate, \"v\" to View an Image, \"n\" to Search a New Term, or Any Other Key to Exit: ";
-
-			switch (continuationChoice = _getch())
-			{
-				case EXTENDED_KEY:
-					noExtended = false;
-					break;
-
-				case ARROW_UP:
-					noExtended = true;
-					if (pageNum == 1)
-					{
-						cout << endl << "You're On The First Page!" << endl;
-						break;
-					}
-					else
-					{
-						pageNum--;
-						breakSwitch = true;
-						newTermSearch = false;
-						cout << endl << endl;
-						break;
-					}
-
-				case ARROW_DOWN:
-					noExtended = true;
-					if (pageNum == uc.GetTotalPages())
-					{
-						cout << endl << "You're On The Last Page!" << endl;
-						break;
-					}
-					else
-					{
-						pageNum++;
-						breakSwitch = true;
-						newTermSearch = false;
-						cout << endl << endl;
-						break;
-					}
-
-				case VIEW:
-					noExtended = true;
-					do
-					{
-						cout << endl << "Select Image You Wish To View [Enter 1-10]: ";
-						cin >> picSelection;
-					} while (picSelection < 1 || picSelection > 10);
-					grabURL = true;
-					break;
-
-				case NEW:
-					noExtended = true;
-					breakSwitch = true;
-					newTermSearch = true;
-					pageNum = 1;
-					cout << endl << endl;
-					break;
-
-				default:
-					noExtended = true;
- 					breakSwitch = true;
-					runProgram = false;
-			}
-
-			if (grabURL)
-			{
-				string url = uc.GetPhoto(picSelection - 1)->url;
-				// An example of launching a browser with a URL to a page. 
-				// See:https://docs.microsoft.com/en-us/windows/win32/shell/launch for more details.
-				ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
-				grabURL = false;
-			}
-		}
-
-		if (!runProgram)
-		{
-			cout << endl << endl;
-			cout << "*********************************************************" << endl << endl;
-			cout << "I Hope You Enjoyed My Unsplash API App" << endl << endl;;
-			cout << "*********************************************************" << endl << endl;
-		}
-	}
-
-	
-}
+//int main(int argc, char* argv[])
+//{
+//	// Leave this, as it will tell you if you have any memory leaks.
+//	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+//
+//	// See https://stackoverflow.com/questions/24708700/c-detect-when-user-presses-arrow-key
+//	const int ARROW_UP	 = 72;
+//	const int ARROW_DOWN = 80;
+//	const int VIEW = 118;
+//	const int EXTENDED_KEY = 224;
+//	const int NEW = 110;
+//
+//	string queryTerm; //
+//	int pageNum = 1;
+//	int compSelection = 0; //0
+//	int ascendingDescendingInput = 0; //0
+//	int picSelection;
+//	int continuationChoice;
+//	bool runProgram = true;
+//	bool noExtended = true;
+//	bool newTermSearch = true;
+//	bool breakSwitch = false;
+//	bool grabURL = false;
+//	bool ascendingBool;
+//
+//	//little entrance message
+//	cout << "*********************************************************" << endl << endl;
+//	cout << "Welcome To My Unsplash API App" << endl << endl;;
+//	cout << "*********************************************************" << endl << endl;
+//
+//	//the whole program is one big loop that can eventually be exited
+//	while (runProgram)
+//	{
+//		//if we are looking for a newSearchTerm, we get that and take a few more user inputs. This should obviously be true when the program first runs, 
+//		//but as the user scrolls through new pages, they won't be looking for a new term, so this block is then skipped
+//		if (newTermSearch)
+//		{
+//			cout << "Please Enter a Query Term Here: ";
+//			cin >> queryTerm;
+//			cout << endl;
+//			//these loops prevent the user from entering invalid entries into the program. can only be exited when they make an allowed choice
+//			while (compSelection != 1 && compSelection != 2)
+//			{
+//				cout << "Sort by Date Created [Enter 1] or Picture Area [Enter 2]: ";
+//				cin >> compSelection;
+//			}
+//			cout << endl;
+//			while (ascendingDescendingInput != 1 && ascendingDescendingInput != 2)
+//			{
+//				cout << "Sort Ascending [Enter 1] or Descending [Enter 2]: ";
+//				cin >> ascendingDescendingInput;
+//			}
+//			cout << endl << endl;
+//
+//			//takes the 1 or 2 they entered coresponding to ascending/descending and converts it to a boolean var
+//			ascendingBool = ascendingDescendingInput == 1 ? true : false;
+//		}
+//		
+//		// An example use invoking an GET on the Unsplash API.
+//		// Notice the query term and the page number.
+//		// only use once per loop, create and destroy each iteration, each query should be a different unsplash client
+//		
+//		UnsplashClient uc;
+//		uc.Connect("api.unsplash.com");
+//		//my individual UnsplashClient API key is added
+//		uc.SetAuthToken("Client-ID", "s17CxGFZrH782-tlJMRgpmVP9b4npi2IibLunn13c-4");
+//		//queryTerm and pageNum sent to the API is dynamic
+//		uc.Get("/search/photos", { {"query", queryTerm}, {"page", to_string(pageNum)} });
+//
+//		//User decides how they want data sorted here
+//		if (compSelection == 1)
+//			uc.BubbleSort<CompareCreatedAt>(ascendingBool);
+//		else
+//			uc.BubbleSort<CompareArea>(ascendingBool);
+//
+//		//output that data to the screen
+//		cout << uc;
+//
+//		//use of GetTotalPages func to do just that 
+//		cout << "------------- Page " << pageNum << " of " << uc.GetTotalPages() << " -------------" << endl << endl;
+//
+//		breakSwitch = false;
+//		/*while (true)
+//		{
+//			auto input = _getch();
+//			cin >> input;
+//			cout << "INPUT: " << input << endl << endl;
+//		}*/
+//
+//		//This structure uses _getch() to take keystrokes from the user and convert them into choices. I used many bool values to control what happens here, 
+//		//and each is explained here, basically explaining what is happening overall:
+//			//breakSwitch: controls the looping of the end of page user input. when a user reaches the end of a page, they have many options explained in
+//				//line 486. If breakSwitch == false, we are NOT breaking out of this loop that repeats the _getch() switch statement. We stay within this loop
+//				//for many reasons; namely if the user views an image and needs to be asked what to do next, if they try to see before the first page ot after
+//				//the last, or if _getch() catches an extended key and not the user choice
+//			//noExtended: this bool catches whether or not to ask the user for input. Added because when using the arrow keys on my machine, pressing any of
+//				//the 4 arrow keys would send in two values: the extended key value (224) and then also the proper value; 72 for up, 80 for down. when the switch
+//				//catches the extended key, we just set noExtended to true because the extended key WAS found, and we proceed to process the actual entry given by
+//				//the user (ie ARROW_UP, etc). If anything except case EXTENDED_KEY is truggered, noExtended is set to true to ensure the user is given the input 
+//				// statement
+//			//newTermSearch: mentioned on line 422-423. When a user wants to see the previos/next page, they are NOT looking for a new search term, but they 
+//				//are looking for the next array of results from the API, so we set this to false to skip over the inputs at the start of the main loop and just
+//				//grab the infor from the API with the same search term but on the next/previous page. This is only set back to true when the user decides to make 
+//				//a new search by entering 'n'
+//			//runProgram: when this is true, which it is by default, the whole program runs. If the user enters a key not found by the switch structure, theyve
+//				//decided to end the program, so we break out of the switch loop by changing breakSwitch, output a goodbye message, and come to the end of main()
+//			//grabURL: when the user chooses to view an image and enters which array entry they want, this is set to true, and then at the end of the switch structure
+//				//a new if structure is triggered that opens the given url in their default browser and we reset this back to false, until the user chooses to view
+//				//another image 
+//			
+//		
+//		while (!breakSwitch)
+//		{
+//			if (noExtended)
+//				cout << "End of Data... Press Up/Down Arrow Keys to Paginate, \"v\" to View an Image, \"n\" to Search a New Term, or Any Other Key to Exit: ";
+//
+//			switch (continuationChoice = _getch())
+//			{
+//				case EXTENDED_KEY:
+//					noExtended = false;
+//					break;
+//
+//				case ARROW_UP:
+//					noExtended = true;
+//					if (pageNum == 1)
+//					{
+//						cout << endl << "You're On The First Page!" << endl;
+//						break;
+//					}
+//					else
+//					{
+//						pageNum--;
+//						breakSwitch = true;
+//						newTermSearch = false;
+//						cout << endl << endl;
+//						break;
+//					}
+//
+//				case ARROW_DOWN:
+//					noExtended = true;
+//					if (pageNum == uc.GetTotalPages())
+//					{
+//						cout << endl << "You're On The Last Page!" << endl;
+//						break;
+//					}
+//					else
+//					{
+//						pageNum++;
+//						breakSwitch = true;
+//						newTermSearch = false;
+//						cout << endl << endl;
+//						break;
+//					}
+//
+//				case VIEW:
+//					noExtended = true;
+//					do
+//					{
+//						cout << endl << "Select Image You Wish To View [Enter 1-10]: ";
+//						cin >> picSelection;
+//					} while (picSelection < 1 || picSelection > 10);
+//					grabURL = true;
+//					break;
+//
+//				case NEW:
+//					noExtended = true;
+//					breakSwitch = true;
+//					newTermSearch = true;
+//					pageNum = 1;
+//					cout << endl << endl;
+//					break;
+//
+//				default:
+//					noExtended = true;
+// 					breakSwitch = true;
+//					runProgram = false;
+//			}
+//
+//			if (grabURL)
+//			{
+//				string url = uc.GetPhoto(picSelection - 1)->url;
+//				// An example of launching a browser with a URL to a page. 
+//				// See:https://docs.microsoft.com/en-us/windows/win32/shell/launch for more details.
+//				ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
+//				grabURL = false;
+//			}
+//		}
+//
+//		if (!runProgram)
+//		{
+//			cout << endl << endl;
+//			cout << "*********************************************************" << endl << endl;
+//			cout << "I Hope You Enjoyed My Unsplash API App" << endl << endl;;
+//			cout << "*********************************************************" << endl << endl;
+//		}
+//	}
+//
+//	
+//}
