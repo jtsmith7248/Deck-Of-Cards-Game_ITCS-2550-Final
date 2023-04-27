@@ -26,9 +26,6 @@
     <ClCompile Include="Week12main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DeckOfCards.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CompareStructs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
