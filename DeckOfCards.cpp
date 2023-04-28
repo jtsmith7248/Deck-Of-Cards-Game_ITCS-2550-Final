@@ -13,21 +13,57 @@ using json = nlohmann::json;
 using namespace std;
 ////////////////////////////////////////////////
 
+enum SUITS
+{
+	NULLSUIT, SPADES, CLUBS, DIAMONDS, HEARTS
+};
+
+string SuitToString(SUITS suit)
+{
+	switch (suit)
+	{
+	case NULLSUIT:
+		return "NULL";
+	case SPADES:
+		return "SPADES";
+	case CLUBS:
+		return "CLUBS";
+	case DIAMONDS:
+		return "DIAMONDS";
+	default:
+		return "HEARTS";
+	}
+}
+
+SUITS StringToSuit(string suitString)
+{
+	if (suitString == "SPADES")
+		return SPADES;
+	else if (suitString == "CLUBS")
+		return CLUBS;
+	else if (suitString == "DIAMONDS")
+		return DIAMONDS;
+	else if (suitString == "HEARTS")
+		return HEARTS;
+	else
+		return NULLSUIT;
+}
 
 // Main user-defined class: parsing, sorting, and virtual functions happen here
 class DeckOfCards : public HttpClient
 {
 public:
+
 	struct DrawCard 
 	{
 		string number;		// API refers to this as "value"
-		string suit;		// (S, C, D, H)
+		SUITS suit;		// (S, C, D, H)
 		string code;		// For printing purposes
 
 		// Overload insertion "<<" operator
 		friend ostream& operator<<(ostream& osObject, const DrawCard& draw) 
 		{
-			cout << endl << "	Suit: " << draw.suit << endl << "	Number: " << draw.number << endl << "	Code: " << draw.code << endl;
+			cout << endl << "	Suit: " << SuitToString(draw.suit) << endl << "	Number: " << draw.number << endl << "	Code: " << draw.code << endl;
 
 			return osObject;
 		}
@@ -60,7 +96,7 @@ public:
 	// Get and return DrawCard suit
 	virtual string GetSuits(int count) {  // const?
 
-		return Card[count]->suit;
+		return SuitToString(Card[count]->suit);
 	}
 
 	// Get and return DrawCard number
@@ -120,8 +156,8 @@ protected:
 		for (auto& individualCardEntry : results)
 		{
 			DrawCard* newCard = new DrawCard;
+			newCard->suit = individualCardEntry["suit"].is_null() ? StringToSuit("NULL") : StringToSuit(individualCardEntry["suit"]);
 			newCard->number = individualCardEntry["value"].is_null() ? "Null" : individualCardEntry["value"];
-			newCard->suit = individualCardEntry["suit"].is_null() ? "Null" : individualCardEntry["suit"];
 			newCard->code = individualCardEntry["code"].is_null() ? "Null" : individualCardEntry["code"];
 			
 			Card[cardsDealt++] = newCard;
