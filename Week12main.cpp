@@ -1,386 +1,386 @@
-﻿#include <iostream>
-#include <shlwapi.h>	// To launch the web browser
-#include <string>
-#include <conio.h>
-#include "HttpClient.h"
-
-#pragma warning( push )
-#pragma warning(disable:26819)
-#include "json.hpp"
-#pragma warning( pop )
-using json = nlohmann::json;
-
-using namespace std;
-////////////////////////////////////////////////
-
-
-//Here we declare our UnsplashClient Class, where everything outside of the UI and the comparisons will be taking place
-class UnsplashClient : public HttpClient
-{
-public:
-	//all the info is going to be read into our Photo Struct so each object can have multiple pieces of information, and we're setting that up here
-	struct Photo
-	{
-		struct Author
-		{
-			string bio;
-			string firstName;
-			string lastName;
-			string location;
-		};
-
-		Author author;
-		string createdDate;
-		string url;
-		string description;
-		int height;
-		int likes;
-		int width;
-
-		//for this project, we only care about a few specific pieces of data being read out to the screen, so in this overloaded << func, we 
-		//output the height, width, and area of a given photo, plus its date created and its Description. We also do a bit of formatting with endl's and indents
-		friend ostream& operator<<(ostream& osObject, const Photo& x)
-		{
-			cout << "Height: " << x.height << ",		Width: " << x.width << ",		Area: " << (x.height * x.width) << ",		Date Created: " << x.createdDate << endl;
-			cout << "Description: " << x.description << endl;
-			return osObject;
-		}
-	};
-
-	//in our destructor we just call DeleteMemory, which actually erases all the dynamically allocated data
-	~UnsplashClient()
-	{
-		DeleteMemory();
-		//added DeleteMemory to show what this would look like in production
-	}
-
-	//template goes to compare functions, T will be the compare class
-	//In bubblesort, we are going to organize any given 10 objects from photos either by their date or size
-	//to do this, we send in an object of the compareClass type we want
-	template<typename T> 
-	void BubbleSort(bool ascending)
-	{
-
-		T compareClassObject;
-
-		//inside of the loop here we are going to be calling the 
-		//compare functions from the T object and using the bool returns to determine whether the two objects 
-		//we sent into photoObject are greater or less than each other , and then swapping or not swapping them as needed
-		
-		//photoCount will be equal to the index in photos, so it will be == 10
-		//BubbleSort works by comparing each object to the next and swapping them based on a condition, usually if one is < or > the other
-		//the outer loop will iterate one time less than the number of elements in the list/array/object/dataset, as 10 objects would mean that 
-		//there are 9 comparisons to make. 
-		//the inner loop will do the actual flipping, and it iterates one time less for each iteration of the main loop, as each time the main loop 
-		//iterates once, the inner loop will have looped until the largest/smallest object has been placed at the top/bottom, and then by shrinking how many 
-		//times the inner loop iterates, we make sure that largest/smallest object isnt touched/compared/swapped, lowering the number of comparisons and slightly
-		//lowering how much power this sort structure takes from our machine
-
-		for (int i = 0; i < photoCount - 1; i++) {
-			for (int j = 0; j < photoCount - i - 1; j++) {
-				//if the user wants it sortest largest to smallest, we enter here, otherwise we to the else
-				if (ascending)
-				{
-					//this is where the compare classes are accesed. The comparison is outsourced there, and the func will return a 'true' value if the 
-					//objects are to be swapped. Otherwise a false is returned and we move on to the next iteration
-					if (compareClassObject.Compare(photos[j], photos[j + 1])) {
-						auto temp1 = photos[j];
-						photos[j] = photos[j + 1];
-						photos[j + 1] = temp1;
-					}
-				}
-				else
-				{
-					//by making this the same as above but with a '!' symbol, the sort order is inversed
-					if (!compareClassObject.Compare(photos[j], photos[j+ 1])) {
-						auto temp2 = photos[j];
-						photos[j] = photos[j + 1];
-						photos[j + 1] = temp2;
-					}
-				}
-			}
-		}
-	}
-
-	//returns a given photos object to main()
-	const Photo* GetPhoto(const int i)
-	{
-		return photos[i];
-	}
-
-	//returns the total number of pages recieved from EndOfData() to main()
-	int GetTotalPages()
-	{
-		return totalPages;
-	}
-
-	//overloaded << operator for this class returns all of the objects on a given page with additional number formatting
-	//uses the overloaded << operator in the Photo struct to accomplish the output of each individual entry 
-	friend ostream& operator<<(ostream& osObject, const UnsplashClient& x)
-	{
-		for (int i = 0; i < x.photoCount; i++)
-		{
-			cout << (i + 1) << ") " << *x.photos[i] << endl;
-		}
-
-		return osObject;
-	}
-
-	//just sets the initial photoCount to 0 before it is added to through iterations in EndOfData()
-	UnsplashClient()
-	{
-		photoCount = 0;
-	}
-
-protected:
-	//takes in all the info from UnsplashClient API and fills a vector woth each individual char
-		//its a lot of chars
-	void Data(const char arrData[], const unsigned int iSize)
-	{
-		//json parsed here, replicate a previous week
-		jsonData.insert(jsonData.end(), arrData, arrData + iSize);
-	}
-
-	//*****TO DO***** [Find a use for this after everything else is done]
-	void StartOfData()
-	{
-		//where do i take the query term from here? put it in the uc.Get func in main()?
-		//maybe shut something else off in program when data begins to be parsed
-	}
-
-	//here we parse the jsonData char vector, and fill all of our photo objects with the requisite data using the nlohmann parser, one at a time 
-	void EndOfData()
-	{
-		json jp = json::parse(jsonData.begin(), jsonData.end());
-		//we grab totalPages, as it is one of three individual objects returned on their own by the API, before diving into the results array
-		totalPages = jp["total_pages"];
-		auto& results = jp["results"];
-		//auto count = results.size(); //line for debugging
-		photos = new Photo*[results.size()];
-		for (auto& photo : results)
-		{
-			//each iteration through results fills a new photo object with the requisite data, then adds that object to our double pointer object 'photos'
-			Photo* p = new Photo;
-			//each line is a tertiary statement, making sure to add the phrase "Null" to p instead of the actual data object NULL if that is what is found
-			//this prevents the program from breaking
-			p->createdDate = photo["created_at"].is_null() ? "Null" : photo["created_at"];
-			p->height = photo["height"].is_null() ? "Null" : photo["height"];
-			p->width = photo["width"].is_null() ? "Null" : photo["width"];
-			p->likes = photo["likes"].is_null() ? "Null" : photo["likes"];
-			p->description = photo["alt_description"].is_null() ? "Null" : photo["alt_description"];
-
-			p->url = photo["urls"]["full"].is_null() ? "Null" : photo["urls"]["full"];
-
-			p->author.bio = photo["user"]["bio"].is_null() ? "Null" : photo["user"]["bio"];
-			p->author.firstName = photo["user"]["first_name"].is_null() ? "Null" : photo["user"]["first_name"];
-			p->author.lastName = photo["user"]["last_name"].is_null() ? "Null" : photo["user"]["last_name"];
-			p->author.location = photo["user"]["location"].is_null() ? "Null" : photo["user"]["location"];
-			//finish filling p
-			photos[photoCount++] = p;
-			//cout << "PHOTOS COUNT: " << photoCount << endl;
-		};
-		
-		//cout << "*****************BEFORE COMPARING*****************" << endl;
-		//for (int i = 0; i < photoCount; i++)
-		//{
-		//	cout << i + 1 << ") " << * photos[i] << endl;
-		//}
-		//cout << "*****************END BEFORE COMPARING*****************" << endl << endl;
-
-	}
-
-private:
-	//here we are deleteing all tyhe dynamically allocated memory, fist by stepping through each object in photos[], then deleting photos itself
-	//prevents data leaks- called from the destructor
-	void DeleteMemory()
-	{
-		//used to free all dynamically allocated memory when required before a new API call
-		for (int i = 0; i < photoCount; i++)
-		{
-			delete photos[i];
-		}
-
-		delete[] photos;
-	}
-
-	vector<char> jsonData;
-	size_t photoCount;
-	Photo** photos;
-	int totalPages;
-
-};
-
-
-struct CompareArea
-{
-	//True is area1>area2, false is area1<=area2
-	//True will be a swap, ordered smallest to largest, false will be a no swap
-	bool Compare(UnsplashClient::Photo* p1, UnsplashClient::Photo* p2)
-	{
-		int area1 = p1->width * p1->height;
-		int area2 = p2->width * p2->height;
-		return (area1 > area2) ? true : false;
-	}
-};
-
-struct CompareCreatedAt
-{	
-	///////////////////////01234     //note: index 0-24, length: 25
-	/////////////0123456789
-	///0123456789
-	//"2017-05-19T14:01:58-04:00"
-	bool date1Younger = false;
-
-	//True is p1 is younger/more recent than p2, False is p1 is as old/older than p2
-	//True will be a swap, ordered oldest to youngest, false will be a no swap
-	bool Compare(UnsplashClient::Photo* p1, UnsplashClient::Photo* p2)
-	{
-
-		/*cout << "*****************COMPARING*****************" << endl;
-		cout << *p1 << endl;
-		cout << *p2 << endl;
-		cout << "*****************END COMPARING*****************" << endl << endl;*/
-
-		//here we get the full date strings for each object, and if the first is null/the second is null while the first is NOT we return false/true 
-		//respectively in order to send all "Null" dates to the top/bottom. 
-		string date1 = p1->createdDate;
-		string date2 = p2->createdDate;
-
-		if (date1 == "Null")
-			return false;
-		else if (date2 == "Null")
-			return true;
-		//otherwise we parse the date strings func by func. Each one compares one part of the string, returning true into date1Younger if date one is 
-		//the more recent, meaning they need to be swapped, and returning false if date1 is Larger, meaning they are not to be swapped. Then we check to see
-		//if they are the same. If they arent, a false is returned from the func and the if breaks, and then the newly set date1Younger bool object is 
-		//returned to BubbleSort(). If they are the same, d1Y would not have yet been set, and a true is returned from the func, so we climb deeper into 
-		//the structure seen below. If the dates&times are the same down to the last second, a false is returned and they are not swapped. Otherwise, at some
-		//point the structure is exited and d1Y is returned
-		else
-		{
-			//the aformentioned structure
-			if (CompYear(date1, date2))
-				if (CompMonth(date1, date2))
-					if (CompDay(date1, date2))
-						if (CompHour(date1, date2))
-							if (CompMin(date1, date2))
-								if (CompSec(date1, date2))
-									return false;   //if you make it all the way through each condition, then every value in the date strings are equal and they are the exact same time, down to the exact same second, and don't need to be swapped
-
-			return date1Younger;
-		}
-		
-	}
-
-	bool CompYear(string d1, string d2)
-	{
-		int y1 = stoi(d1.substr(0, 4));
-		int y2 = stoi(d2.substr(0, 4));
-
-		if (y1 < y2)
-			date1Younger = false;
-		else if (y1 > y2)
-			date1Younger = true;
-
-		return (y1 == y2) ? true : false;
-	}
-
-	bool CompMonth(string d1, string d2)
-	{
-		int m1 = stoi(d1.substr(5, 7));
-		int m2 = stoi(d2.substr(5, 7));
-
-		if (m1 < m2)
-			date1Younger = false;
-		else if (m1 > m2)
-			date1Younger = true;
-
-		return (m1 == m2) ? true : false;
-	}
-
-	bool CompDay(string d1, string d2)
-	{
-		int day1 = stoi(d1.substr(8, 10));
-		int day2 = stoi(d2.substr(8, 10));
-
-		if (day1 < day2)
-			date1Younger = false;
-		else if (day1 > day2)
-			date1Younger = true;
-
-		return (day1 == day2) ? true : false;
-	}
-
-	bool CompHour(string d1, string d2)
-	{
-		//Getting the hour time and then subtracting the offsets from UTC
-		//
-		//UST follows the Prime Meridian in the Atlantic through England. 
-		//As hours INCREASE away from UST, we approach the International Date Line from the front, finding the places in the world 
-		//that experience a time FIRST. 1PM in the new time will have happened BEFORE 1pm UST. 
-		//As we DECREASE away from UST, we approach the IDL from the back, finding the places that experience a time LAST. 1PM in these
-		//time zones happen AFTER 1pm UST. This is why New Year's in Sydney, Australia happens 20 hours before New Year's in Honolulu, 
-		//Hawaii, despite both occuring, according to the clock, at 12AM Jan 1. 
-		// 
-		//So, if two times were exactly the same at 5AM except h1 is in EST (UTC-4) and h2 is in JST(UTC+8), we get
-		//h1 = 5-(-4)=9 and h2=5-(+8)=-3
-		//The smaller int time is the oldest. We want to set date1Younger = false and avoid swapping if h1 is older, aka h1<h2
-		//In our example, by including the offsets, we find that 5am JST occurs before 5am EST, and h2<h1, meaning they need to be
-		//swapped and we can return true
-		//
-		//If no time zone is given, the 20th char in the string will be a Z, and in that case we ignore the impact of timezones
-
-		int hour1, hour2;
-
-		if (d1.substr(19, 20) == "Z" || d2.substr(19, 20) == "Z")
-		{
-			hour1 = stoi(d1.substr(11, 13));
-			hour2 = stoi(d2.substr(11, 13));
-		}
-		else
-		{
-			hour1 = stoi(d1.substr(11, 13)) - stoi(d1.substr(19, 22));
-			hour2 = stoi(d2.substr(11, 13)) - stoi(d2.substr(19, 22));
-		}
-
-		if (hour1 < hour2)
-			date1Younger = false;
-		else if (hour1 > hour2)
-			date1Younger = true;
-
-		return (hour1 == hour2) ? true : false;
-
-		//Small note: there are non-standard time zones, where instead of being different by an even number of hours, theyre off by 
-		//1 1/2 or even 1 3/4s hours. Here, if they are off by an extra 30 or 45 minutes, that leftover difference isn't caught. Consider
-		//it a bug to be fixed later haha
-	}
-
-	bool CompMin(string d1, string d2)
-	{
-		int min1 = stoi(d1.substr(14, 16));
-		int min2 = stoi(d2.substr(14, 16));
-
-		if (min1 < min2)
-			date1Younger = false;
-		else if (min1 > min2)
-			date1Younger = true;
-
-		return (min1 == min2) ? true : false;
-	}
-
-	bool CompSec(string d1, string d2)
-	{
-		int s1 = stoi(d1.substr(17, 19));
-		int s2 = stoi(d2.substr(17, 19));
-
-		if (s1 < s2)
-			date1Younger = false;
-		else if (s1 > s2)
-			date1Younger = true;
-
-		return (s1 == s2) ? true : false;
-	}
-};
+﻿//#include <iostream>
+//#include <shlwapi.h>	// To launch the web browser
+//#include <string>
+//#include <conio.h>
+//#include "HttpClient.h"
+//
+//#pragma warning( push )
+//#pragma warning(disable:26819)
+//#include "json.hpp"
+//#pragma warning( pop )
+//using json = nlohmann::json;
+//
+//using namespace std;
+//////////////////////////////////////////////////
+//
+//
+////Here we declare our UnsplashClient Class, where everything outside of the UI and the comparisons will be taking place
+//class UnsplashClient : public HttpClient
+//{
+//public:
+//	//all the info is going to be read into our Photo Struct so each object can have multiple pieces of information, and we're setting that up here
+//	struct Photo
+//	{
+//		struct Author
+//		{
+//			string bio;
+//			string firstName;
+//			string lastName;
+//			string location;
+//		};
+//
+//		Author author;
+//		string createdDate;
+//		string url;
+//		string description;
+//		int height;
+//		int likes;
+//		int width;
+//
+//		//for this project, we only care about a few specific pieces of data being read out to the screen, so in this overloaded << func, we 
+//		//output the height, width, and area of a given photo, plus its date created and its Description. We also do a bit of formatting with endl's and indents
+//		friend ostream& operator<<(ostream& osObject, const Photo& x)
+//		{
+//			cout << "Height: " << x.height << ",		Width: " << x.width << ",		Area: " << (x.height * x.width) << ",		Date Created: " << x.createdDate << endl;
+//			cout << "Description: " << x.description << endl;
+//			return osObject;
+//		}
+//	};
+//
+//	//in our destructor we just call DeleteMemory, which actually erases all the dynamically allocated data
+//	~UnsplashClient()
+//	{
+//		DeleteMemory();
+//		//added DeleteMemory to show what this would look like in production
+//	}
+//
+//	//template goes to compare functions, T will be the compare class
+//	//In bubblesort, we are going to organize any given 10 objects from photos either by their date or size
+//	//to do this, we send in an object of the compareClass type we want
+//	template<typename T> 
+//	void BubbleSort(bool ascending)
+//	{
+//
+//		T compareClassObject;
+//
+//		//inside of the loop here we are going to be calling the 
+//		//compare functions from the T object and using the bool returns to determine whether the two objects 
+//		//we sent into photoObject are greater or less than each other , and then swapping or not swapping them as needed
+//		
+//		//photoCount will be equal to the index in photos, so it will be == 10
+//		//BubbleSort works by comparing each object to the next and swapping them based on a condition, usually if one is < or > the other
+//		//the outer loop will iterate one time less than the number of elements in the list/array/object/dataset, as 10 objects would mean that 
+//		//there are 9 comparisons to make. 
+//		//the inner loop will do the actual flipping, and it iterates one time less for each iteration of the main loop, as each time the main loop 
+//		//iterates once, the inner loop will have looped until the largest/smallest object has been placed at the top/bottom, and then by shrinking how many 
+//		//times the inner loop iterates, we make sure that largest/smallest object isnt touched/compared/swapped, lowering the number of comparisons and slightly
+//		//lowering how much power this sort structure takes from our machine
+//
+//		for (int i = 0; i < photoCount - 1; i++) {
+//			for (int j = 0; j < photoCount - i - 1; j++) {
+//				//if the user wants it sortest largest to smallest, we enter here, otherwise we to the else
+//				if (ascending)
+//				{
+//					//this is where the compare classes are accesed. The comparison is outsourced there, and the func will return a 'true' value if the 
+//					//objects are to be swapped. Otherwise a false is returned and we move on to the next iteration
+//					if (compareClassObject.Compare(photos[j], photos[j + 1])) {
+//						auto temp1 = photos[j];
+//						photos[j] = photos[j + 1];
+//						photos[j + 1] = temp1;
+//					}
+//				}
+//				else
+//				{
+//					//by making this the same as above but with a '!' symbol, the sort order is inversed
+//					if (!compareClassObject.Compare(photos[j], photos[j+ 1])) {
+//						auto temp2 = photos[j];
+//						photos[j] = photos[j + 1];
+//						photos[j + 1] = temp2;
+//					}
+//				}
+//			}
+//		}
+//	}
+//
+//	//returns a given photos object to main()
+//	const Photo* GetPhoto(const int i)
+//	{
+//		return photos[i];
+//	}
+//
+//	//returns the total number of pages recieved from EndOfData() to main()
+//	int GetTotalPages()
+//	{
+//		return totalPages;
+//	}
+//
+//	//overloaded << operator for this class returns all of the objects on a given page with additional number formatting
+//	//uses the overloaded << operator in the Photo struct to accomplish the output of each individual entry 
+//	friend ostream& operator<<(ostream& osObject, const UnsplashClient& x)
+//	{
+//		for (int i = 0; i < x.photoCount; i++)
+//		{
+//			cout << (i + 1) << ") " << *x.photos[i] << endl;
+//		}
+//
+//		return osObject;
+//	}
+//
+//	//just sets the initial photoCount to 0 before it is added to through iterations in EndOfData()
+//	UnsplashClient()
+//	{
+//		photoCount = 0;
+//	}
+//
+//protected:
+//	//takes in all the info from UnsplashClient API and fills a vector woth each individual char
+//		//its a lot of chars
+//	void Data(const char arrData[], const unsigned int iSize)
+//	{
+//		//json parsed here, replicate a previous week
+//		jsonData.insert(jsonData.end(), arrData, arrData + iSize);
+//	}
+//
+//	//*****TO DO***** [Find a use for this after everything else is done]
+//	void StartOfData()
+//	{
+//		//where do i take the query term from here? put it in the uc.Get func in main()?
+//		//maybe shut something else off in program when data begins to be parsed
+//	}
+//
+//	//here we parse the jsonData char vector, and fill all of our photo objects with the requisite data using the nlohmann parser, one at a time 
+//	void EndOfData()
+//	{
+//		json jp = json::parse(jsonData.begin(), jsonData.end());
+//		//we grab totalPages, as it is one of three individual objects returned on their own by the API, before diving into the results array
+//		totalPages = jp["total_pages"];
+//		auto& results = jp["results"];
+//		//auto count = results.size(); //line for debugging
+//		photos = new Photo*[results.size()];
+//		for (auto& photo : results)
+//		{
+//			//each iteration through results fills a new photo object with the requisite data, then adds that object to our double pointer object 'photos'
+//			Photo* p = new Photo;
+//			//each line is a tertiary statement, making sure to add the phrase "Null" to p instead of the actual data object NULL if that is what is found
+//			//this prevents the program from breaking
+//			p->createdDate = photo["created_at"].is_null() ? "Null" : photo["created_at"];
+//			p->height = photo["height"].is_null() ? "Null" : photo["height"];
+//			p->width = photo["width"].is_null() ? "Null" : photo["width"];
+//			p->likes = photo["likes"].is_null() ? "Null" : photo["likes"];
+//			p->description = photo["alt_description"].is_null() ? "Null" : photo["alt_description"];
+//
+//			p->url = photo["urls"]["full"].is_null() ? "Null" : photo["urls"]["full"];
+//
+//			p->author.bio = photo["user"]["bio"].is_null() ? "Null" : photo["user"]["bio"];
+//			p->author.firstName = photo["user"]["first_name"].is_null() ? "Null" : photo["user"]["first_name"];
+//			p->author.lastName = photo["user"]["last_name"].is_null() ? "Null" : photo["user"]["last_name"];
+//			p->author.location = photo["user"]["location"].is_null() ? "Null" : photo["user"]["location"];
+//			//finish filling p
+//			photos[photoCount++] = p;
+//			//cout << "PHOTOS COUNT: " << photoCount << endl;
+//		};
+//		
+//		//cout << "*****************BEFORE COMPARING*****************" << endl;
+//		//for (int i = 0; i < photoCount; i++)
+//		//{
+//		//	cout << i + 1 << ") " << * photos[i] << endl;
+//		//}
+//		//cout << "*****************END BEFORE COMPARING*****************" << endl << endl;
+//
+//	}
+//
+//private:
+//	//here we are deleteing all tyhe dynamically allocated memory, fist by stepping through each object in photos[], then deleting photos itself
+//	//prevents data leaks- called from the destructor
+//	void DeleteMemory()
+//	{
+//		//used to free all dynamically allocated memory when required before a new API call
+//		for (int i = 0; i < photoCount; i++)
+//		{
+//			delete photos[i];
+//		}
+//
+//		delete[] photos;
+//	}
+//
+//	vector<char> jsonData;
+//	size_t photoCount;
+//	Photo** photos;
+//	int totalPages;
+//
+//};
+//
+//
+//struct CompareArea
+//{
+//	//True is area1>area2, false is area1<=area2
+//	//True will be a swap, ordered smallest to largest, false will be a no swap
+//	bool Compare(UnsplashClient::Photo* p1, UnsplashClient::Photo* p2)
+//	{
+//		int area1 = p1->width * p1->height;
+//		int area2 = p2->width * p2->height;
+//		return (area1 > area2) ? true : false;
+//	}
+//};
+//
+//struct CompareCreatedAt
+//{	
+//	///////////////////////01234     //note: index 0-24, length: 25
+//	/////////////0123456789
+//	///0123456789
+//	//"2017-05-19T14:01:58-04:00"
+//	bool date1Younger = false;
+//
+//	//True is p1 is younger/more recent than p2, False is p1 is as old/older than p2
+//	//True will be a swap, ordered oldest to youngest, false will be a no swap
+//	bool Compare(UnsplashClient::Photo* p1, UnsplashClient::Photo* p2)
+//	{
+//
+//		/*cout << "*****************COMPARING*****************" << endl;
+//		cout << *p1 << endl;
+//		cout << *p2 << endl;
+//		cout << "*****************END COMPARING*****************" << endl << endl;*/
+//
+//		//here we get the full date strings for each object, and if the first is null/the second is null while the first is NOT we return false/true 
+//		//respectively in order to send all "Null" dates to the top/bottom. 
+//		string date1 = p1->createdDate;
+//		string date2 = p2->createdDate;
+//
+//		if (date1 == "Null")
+//			return false;
+//		else if (date2 == "Null")
+//			return true;
+//		//otherwise we parse the date strings func by func. Each one compares one part of the string, returning true into date1Younger if date one is 
+//		//the more recent, meaning they need to be swapped, and returning false if date1 is Larger, meaning they are not to be swapped. Then we check to see
+//		//if they are the same. If they arent, a false is returned from the func and the if breaks, and then the newly set date1Younger bool object is 
+//		//returned to BubbleSort(). If they are the same, d1Y would not have yet been set, and a true is returned from the func, so we climb deeper into 
+//		//the structure seen below. If the dates&times are the same down to the last second, a false is returned and they are not swapped. Otherwise, at some
+//		//point the structure is exited and d1Y is returned
+//		else
+//		{
+//			//the aformentioned structure
+//			if (CompYear(date1, date2))
+//				if (CompMonth(date1, date2))
+//					if (CompDay(date1, date2))
+//						if (CompHour(date1, date2))
+//							if (CompMin(date1, date2))
+//								if (CompSec(date1, date2))
+//									return false;   //if you make it all the way through each condition, then every value in the date strings are equal and they are the exact same time, down to the exact same second, and don't need to be swapped
+//
+//			return date1Younger;
+//		}
+//		
+//	}
+//
+//	bool CompYear(string d1, string d2)
+//	{
+//		int y1 = stoi(d1.substr(0, 4));
+//		int y2 = stoi(d2.substr(0, 4));
+//
+//		if (y1 < y2)
+//			date1Younger = false;
+//		else if (y1 > y2)
+//			date1Younger = true;
+//
+//		return (y1 == y2) ? true : false;
+//	}
+//
+//	bool CompMonth(string d1, string d2)
+//	{
+//		int m1 = stoi(d1.substr(5, 7));
+//		int m2 = stoi(d2.substr(5, 7));
+//
+//		if (m1 < m2)
+//			date1Younger = false;
+//		else if (m1 > m2)
+//			date1Younger = true;
+//
+//		return (m1 == m2) ? true : false;
+//	}
+//
+//	bool CompDay(string d1, string d2)
+//	{
+//		int day1 = stoi(d1.substr(8, 10));
+//		int day2 = stoi(d2.substr(8, 10));
+//
+//		if (day1 < day2)
+//			date1Younger = false;
+//		else if (day1 > day2)
+//			date1Younger = true;
+//
+//		return (day1 == day2) ? true : false;
+//	}
+//
+//	bool CompHour(string d1, string d2)
+//	{
+//		//Getting the hour time and then subtracting the offsets from UTC
+//		//
+//		//UST follows the Prime Meridian in the Atlantic through England. 
+//		//As hours INCREASE away from UST, we approach the International Date Line from the front, finding the places in the world 
+//		//that experience a time FIRST. 1PM in the new time will have happened BEFORE 1pm UST. 
+//		//As we DECREASE away from UST, we approach the IDL from the back, finding the places that experience a time LAST. 1PM in these
+//		//time zones happen AFTER 1pm UST. This is why New Year's in Sydney, Australia happens 20 hours before New Year's in Honolulu, 
+//		//Hawaii, despite both occuring, according to the clock, at 12AM Jan 1. 
+//		// 
+//		//So, if two times were exactly the same at 5AM except h1 is in EST (UTC-4) and h2 is in JST(UTC+8), we get
+//		//h1 = 5-(-4)=9 and h2=5-(+8)=-3
+//		//The smaller int time is the oldest. We want to set date1Younger = false and avoid swapping if h1 is older, aka h1<h2
+//		//In our example, by including the offsets, we find that 5am JST occurs before 5am EST, and h2<h1, meaning they need to be
+//		//swapped and we can return true
+//		//
+//		//If no time zone is given, the 20th char in the string will be a Z, and in that case we ignore the impact of timezones
+//
+//		int hour1, hour2;
+//
+//		if (d1.substr(19, 20) == "Z" || d2.substr(19, 20) == "Z")
+//		{
+//			hour1 = stoi(d1.substr(11, 13));
+//			hour2 = stoi(d2.substr(11, 13));
+//		}
+//		else
+//		{
+//			hour1 = stoi(d1.substr(11, 13)) - stoi(d1.substr(19, 22));
+//			hour2 = stoi(d2.substr(11, 13)) - stoi(d2.substr(19, 22));
+//		}
+//
+//		if (hour1 < hour2)
+//			date1Younger = false;
+//		else if (hour1 > hour2)
+//			date1Younger = true;
+//
+//		return (hour1 == hour2) ? true : false;
+//
+//		//Small note: there are non-standard time zones, where instead of being different by an even number of hours, theyre off by 
+//		//1 1/2 or even 1 3/4s hours. Here, if they are off by an extra 30 or 45 minutes, that leftover difference isn't caught. Consider
+//		//it a bug to be fixed later haha
+//	}
+//
+//	bool CompMin(string d1, string d2)
+//	{
+//		int min1 = stoi(d1.substr(14, 16));
+//		int min2 = stoi(d2.substr(14, 16));
+//
+//		if (min1 < min2)
+//			date1Younger = false;
+//		else if (min1 > min2)
+//			date1Younger = true;
+//
+//		return (min1 == min2) ? true : false;
+//	}
+//
+//	bool CompSec(string d1, string d2)
+//	{
+//		int s1 = stoi(d1.substr(17, 19));
+//		int s2 = stoi(d2.substr(17, 19));
+//
+//		if (s1 < s2)
+//			date1Younger = false;
+//		else if (s1 > s2)
+//			date1Younger = true;
+//
+//		return (s1 == s2) ? true : false;
+//	}
+//};
 
 
 
