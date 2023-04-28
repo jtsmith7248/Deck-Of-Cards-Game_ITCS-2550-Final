@@ -168,16 +168,18 @@ int main(int argc, char* argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	string cinNumCardsString;
+	string exit;
 	string exceptionMessage = "Invalid Entry. Please Enter an Integer in the Given Range.";
 	int numCardsInt;
 	bool continueGetNumCards = true;
+	bool exitProgram = false;
 
 	//little entrance message
 	cout << "*********************************************************" << endl << endl;
 	cout << "Welcome To The Deck of Cards Minigame Player" << endl << endl;;
 	cout << "*********************************************************" << endl << endl;
 
-	while (true)
+	while (!exitProgram)
 	{
 		while (continueGetNumCards)
 		{
@@ -217,6 +219,14 @@ int main(int argc, char* argv[])
 		cout << dc;
 
 		continueGetNumCards = true;
+
+		cout << endl << "Do You Wish to Exit Program? [Enter \"x\" for \'Yes\', Any Other Key for \'No\': ";
+		getline(cin, exit);
+
+		if (exit == "x")
+			exitProgram = true;
+
+		cout << endl;
 	}
 
 };
