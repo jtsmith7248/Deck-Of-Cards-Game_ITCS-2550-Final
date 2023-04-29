@@ -1,8 +1,11 @@
+
+//TODO: Check which is necessary and remove if not
 #include <iostream>
 #include <shlwapi.h>	// To launch the web browser
 #include <string>
 #include <conio.h>
 #include "HttpClient.h"
+
 
 #pragma warning( push )
 #pragma warning(disable:26819)
@@ -13,6 +16,8 @@ using json = nlohmann::json;
 using namespace std;
 ////////////////////////////////////////////////
 
+
+// TODO: Do the enum functions need to be outside of the class?
 enum SUITS
 {
 	NULLSUIT, SPADES, CLUBS, DIAMONDS, HEARTS
@@ -57,13 +62,18 @@ public:
 	struct DrawCard 
 	{
 		string number;		// API refers to this as "value"
-		SUITS suit;		// (S, C, D, H)
+		SUITS suit;			// (S, C, D, H)
 		string code;		// For printing purposes
 
 		// Overload insertion "<<" operator
 		friend ostream& operator<<(ostream& osObject, const DrawCard& draw) 
 		{
-			cout << endl << "	Suit: " << SuitToString(draw.suit) << endl << "	Number: " << draw.number << endl << "	Code: " << draw.code << endl;
+
+			osObject << "Suit: " << SuitToString(draw.suit) << setw(2) << left << "\t"
+				<< "Number: " << draw.number << setw(2) << left << "\t"
+				<< "Code: " << draw.code << setw(2) << left << endl;
+			return osObject;
+			//cout << endl << "	Suit: " << SuitToString(draw.suit) << endl << "	Number: " << draw.number << endl << "	Code: " << draw.code << endl;
 
 			return osObject;
 		}
@@ -75,14 +85,12 @@ public:
 	// Destructor
 	~DeckOfCards() 
 	{
-	
 		for (int i = 0; i < cardsDealt; i++)
 		{
 			delete Card[i];
 		}
 
 		delete[] Card;
-	
 	}
 
 	//UPDATE: Removed Bubblesort from DeckOfCards, it is only overloaded in HardMode (LOTD) and not in EasyMode (GG),
@@ -119,14 +127,16 @@ public:
 	}
 
 	// Uses overloaded insertion "<<" operator in DrawCard struct to stream output of DeckOfCards class
-	friend ostream& operator<<(ostream& osObject, const DeckOfCards& dc) {
+	friend ostream& operator<<(ostream& osObject, const DeckOfCards& dc)
+	{
 
-		cout << endl << "*****************OUTPUT*****************" << endl;
+		osObject << endl << "*****************OUTPUT*****************" << endl;
+
 		for (int i = 0; i < dc.cardsDealt; i++)
 		{
-			cout << i + 1 << ") " << *dc.Card[i] << endl;
+			osObject << i + 1 << ") " << *dc.Card[i] << endl;
 		}
-		cout << "*****************END OUTPUT*****************" << endl << endl;
+		osObject << "*****************END OUTPUT*****************" << endl << endl;
 
 		return osObject;
 	}
@@ -163,11 +173,10 @@ protected:
 			Card[cardsDealt++] = newCard;
 			//cout << "CARDS COUNT: " << cardsDealt << endl;
 		};
-
 	}
 
 private:
-	//here we are deleteing all tyhe dynamically allocated memory, fist by stepping through each object in photos[], then deleting photos itself
+	//here we are deleteing all the dynamically allocated memory, fist by stepping through each object in photos[], then deleting photos itself
 	//prevents data leaks - called from the destructor
 	//void DeleteMemory()
 	//{
@@ -180,7 +189,7 @@ private:
 	//}
 
 	vector<char> jsonData;
-	size_t cardsDealt = 0;  // Default is 1 card
+	size_t cardsDealt = 1;		// Default is 1 card
 	DrawCard** Card;
 
 };
@@ -199,6 +208,16 @@ private:
 
 // INSERT/WORK ON MAIN AFTER ALL FILES/FUNCTIONS ARE ADDED
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+//const string CARDSYMBOLS = "\x03  \x04  \x05  \x06  ";
+
+void GreetMessage();
+void ExitMessage();
+
 int main(int argc, char* argv[])
 {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -210,10 +229,7 @@ int main(int argc, char* argv[])
 	bool continueGetNumCards = true;
 	bool exitProgram = false;
 
-	//little entrance message
-	cout << "*********************************************************" << endl << endl;
-	cout << "Welcome To The Deck of Cards Minigame Player" << endl << endl;;
-	cout << "*********************************************************" << endl << endl;
+	GreetMessage();		// Greeting message intro
 
 	while (!exitProgram)
 	{
@@ -249,7 +265,7 @@ int main(int argc, char* argv[])
 		DeckOfCards dc;
 		dc.Connect("deckofcardsapi.com");
 
-		//TO UPDATE: Add if structure to decide which request to send in depending on the minigame
+		//TODO: Add if structure to decide which request to send in depending on the minigame
 		dc.Get("/api/deck/new/draw", { {"count", cinNumCardsString}, {"jokers_enabled", "true"} });
 
 		cout << dc;
@@ -261,8 +277,32 @@ int main(int argc, char* argv[])
 
 		if (exit == "x")
 			exitProgram = true;
-
-		cout << endl;
 	}
 
-};
+	ExitMessage();
+	return 0;
+}
+
+void GreetMessage()
+{
+	string greeting = "   Welcome To The DECK OF CARDS Minigame!    ";
+	string cardSymbols = "\x03  \x04  \x05  \x06  ";		// setfill doesn't allow * + space; intialized string var to avoid repeating
+	cout << setfill('*') << setw(70) << " " << endl;
+	cout << setfill('_') << setw(70) << " " << endl;
+	cout << endl << " " << cardSymbols << greeting << cardSymbols << endl;
+	cout << setw(70) << setfill('_') << " " << endl << endl << endl;
+	//cout << endl << setw(71) << setfill('*') << " " << endl << endl;
+}
+
+void ExitMessage()
+{
+	// prints the heart, spade, club, and diamond extended ASCII characters
+	string cardSymbols = "\x03  \x04  \x05  \x06  ";
+	string exitMessage = "  GAME TERMINATED: Thank you for playing!    ";
+
+	//cout << endl << setfill(' ') << 
+	cout << endl << setfill('_') << setw(70) << right << " " << endl;
+	cout << endl << " " << cardSymbols << exitMessage << cardSymbols << endl;
+	cout << setw(70) << setfill('_') << " " << endl << endl;
+	cout << setw(70) << setfill('*') << " " << endl << endl;
+}
