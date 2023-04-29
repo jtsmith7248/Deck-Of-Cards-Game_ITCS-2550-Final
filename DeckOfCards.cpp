@@ -275,7 +275,7 @@ int main(int argc, char* argv[])
 			exitProgram = true;
 	}
 
-	ExitMessage();
+	ExitMessage();	// Exit message
 	return 0;
 }
 
