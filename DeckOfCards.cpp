@@ -69,7 +69,7 @@ public:
 		friend ostream& operator<<(ostream& osObject, const DrawCard& draw) 
 		{
 
-			osObject << "Suit: " << SuitToString(draw.suit) << setw(2) << left << "\t"
+			osObject << setfill(' ') << setw(2) << left << "Suit: " << SuitToString(draw.suit) << setw(4) << right << "\t"
 				<< "Number: " << draw.number << setw(2) << left << "\t"
 				<< "Code: " << draw.code << setw(2) << left << endl;
 			return osObject;
@@ -85,11 +85,9 @@ public:
 	// Destructor
 	~DeckOfCards() 
 	{
-		for (int i = 0; i < cardsDealt; i++)
-		{
+		for (int i = 0; i < cardsDealt; i++) {
 			delete Card[i];
 		}
-
 		delete[] Card;
 	}
 
@@ -130,13 +128,14 @@ public:
 	friend ostream& operator<<(ostream& osObject, const DeckOfCards& dc)
 	{
 
-		osObject << endl << "*****************OUTPUT*****************" << endl;
-
+		//osObject << endl << "*****************OUTPUT*****************" << endl;
+		osObject << setfill(' ') << setw(44) << right << " PLAYER CARDS DRAWN: " << endl << endl;
 		for (int i = 0; i < dc.cardsDealt; i++)
 		{
-			osObject << i + 1 << ") " << *dc.Card[i] << endl;
+			osObject << setw(10) << right << 1 + i << ") " << *dc.Card[i] << endl;
 		}
-		osObject << "*****************END OUTPUT*****************" << endl << endl;
+		
+		//osObject << "*****************END OUTPUT*****************" << endl << endl;
 
 		return osObject;
 	}
@@ -189,7 +188,7 @@ private:
 	//}
 
 	vector<char> jsonData;
-	size_t cardsDealt = 1;		// Default is 1 card
+	size_t cardsDealt;		// Default is 1 card
 	DrawCard** Card;
 
 };
@@ -211,9 +210,6 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
-//const string CARDSYMBOLS = "\x03  \x04  \x05  \x06  ";
 
 void GreetMessage();
 void ExitMessage();
@@ -260,7 +256,7 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		cout << endl;
+		cout << endl << endl;
 
 		DeckOfCards dc;
 		dc.Connect("deckofcardsapi.com");
@@ -285,13 +281,14 @@ int main(int argc, char* argv[])
 
 void GreetMessage()
 {
+	// prints the heart, spade, club, and diamond extended ASCII characters
+	string cardSymbols = "\x03  \x04  \x05  \x06  ";
 	string greeting = "   Welcome To The DECK OF CARDS Minigame!    ";
-	string cardSymbols = "\x03  \x04  \x05  \x06  ";		// setfill doesn't allow * + space; intialized string var to avoid repeating
+
 	cout << setfill('*') << setw(70) << " " << endl;
 	cout << setfill('_') << setw(70) << " " << endl;
 	cout << endl << " " << cardSymbols << greeting << cardSymbols << endl;
 	cout << setw(70) << setfill('_') << " " << endl << endl << endl;
-	//cout << endl << setw(71) << setfill('*') << " " << endl << endl;
 }
 
 void ExitMessage()
@@ -300,7 +297,6 @@ void ExitMessage()
 	string cardSymbols = "\x03  \x04  \x05  \x06  ";
 	string exitMessage = "  GAME TERMINATED: Thank you for playing!    ";
 
-	//cout << endl << setfill(' ') << 
 	cout << endl << setfill('_') << setw(70) << right << " " << endl;
 	cout << endl << " " << cardSymbols << exitMessage << cardSymbols << endl;
 	cout << setw(70) << setfill('_') << " " << endl << endl;
