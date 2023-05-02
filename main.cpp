@@ -363,7 +363,7 @@ public:
 		//at a given moment into either the map vector savePreJokerResults or savePreSortOutput, based on which bool value is sent in
 	void SaveOutput(bool preJokerOutput)
 	{
-		DrawCard* draw = *Card;		// TODO: Do we need this?
+		DrawCard* draw = *Card;
 		string output;
 		string num;
 
@@ -379,7 +379,6 @@ public:
 			OutputToVector(*Card[i]);
 			// The map<int, vector<string>> receives the data from saveResult vector and places it in index i.
 			cardResults[i] = saveResult;
-			//output += to_string(i + 1) + ") " + OutputToVector(*Card[i]) + "\n";
 
 			saveResult.clear();				// Clears results to add new vector of saveResult to next iteration of cardResults
 			saveResult.shrink_to_fit();		// Frees memory space taken by saveResult
@@ -475,7 +474,7 @@ public:
 			for (int j = 0; j < jokerlessCardsDealt - i - 1; j++) {
 				if (compareClassObject.Compare(Card[j], Card[j + 1])) {
 					//Was having trouble with the assignment operator and the Card[] objects, so each element individually is swapped 
-						//instead of whole card objects at a time ala week 12
+						//instead of whole card objects at a time aka week 12
 					auto tempCode = Card[j]->code;
 					auto tempSuit = Card[j]->suit;
 					auto tempNumber = Card[j]->number;
