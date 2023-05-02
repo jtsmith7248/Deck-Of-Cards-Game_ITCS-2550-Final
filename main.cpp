@@ -474,7 +474,7 @@ public:
 			for (int j = 0; j < jokerlessCardsDealt - i - 1; j++) {
 				if (compareClassObject.Compare(Card[j], Card[j + 1])) {
 					//Was having trouble with the assignment operator and the Card[] objects, so each element individually is swapped 
-						//instead of whole card objects at a time aka week 12
+						//instead of whole card objects at a time like was done in week 12
 					auto tempCode = Card[j]->code;
 					auto tempSuit = Card[j]->suit;
 					auto tempNumber = Card[j]->number;
