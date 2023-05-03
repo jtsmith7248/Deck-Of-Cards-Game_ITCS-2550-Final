@@ -1,11 +1,15 @@
-# UnsplashClient
+# DeckOfCardsGame
 
-We are going to be using the Deck of Cards API found here to create a couple of mini games that will implement each requirement for the final project.
-- First, we will create a parent class that will contain the struct for each individual card (struct members for suits and value), and we will set up virtual functions for the child classes to overload and overload operators for printing the results from the structs.
-- In game number one, inside of an inherited class, the user will be guessing a random card value. If they don’t guess it on the first try, the program will return hints “higher” or “lower” to guide the user in the direction of the answer.
-- The second inherited class will ask the user to draw as many cards as they would like from a single deck, and then sort them in order by either suit or numeric value. If the user is dealt a joker, which would be found via searching and exception handling, then a message would be returned, and that card would be replaced. 
-- To expand on the above, exception handling will be implemented in each class by ensuring that the data from the API is properly parsed into the data vector and the struct members (i.e. null values). It will also be used by ensuring that the user only gets 5 guesses in game number one. 
+ DECKOFCARDS FINAL PROJECT - JUSTIN SMITH, NGUYEN TRAN, VIOLET YOUSIF 
+ 
+ GAME OVERVIEW:
+ 
+- This project builds off of the work we have been doing in ITCS 2550 for weeks and uses the HttpClient class to connect to the Internet in order to send requests and read from an API called Deck of Cards. Using this API, we send in a request for a user to request a number of cards. They will get dealt back that many cards out of a deck of 52 or 54. Then, the user will play a little mini game using these randomly dealt cards.
 
-<b>Note:</b> Comments and building the Repo should be finished after getting the program running. <br>
-<br>
-<i>Further details of implementation can be found above in Statement of Work pdf.</i>
+- There are two mini games-GuessingGame (Easy Mode) and LuckOfTheDrawGame (Hard Mode). In these two games, we implement multiple different concepts covered within the semester. Inheritence, Polymorphism, Overloaded Operators, Templates, Enums, Vectors, Searching, Sorting, Exception Handling, Dynamic Memory Allocation, Double Pointers, and a Clean UI are all utilized at one point or another throughout this program.
+  - In Minigame 1, aka Easy Mode or GuessingGame, the user has to guess the value of a randomly drawn card. They have five chances to get it, and the values range from "1" for any Ace drawn to "13" for a King.
+  - In Minigame 2, aka Hard Mode or LuckOfTheDrawGame, the user is asked how many cards they would like to draw, from 1-5. A deck of cards contains 54 cards instead of the standard 52 in this game, as two jokers are mixed into the bunch. The Minigame class then searches for any Joker in the drawn cards and replaces it if found, otherwise outputs a 'No Jokers Found' message. They the user has to guess the total value of all of the cards added together. This ranges from  2 (a single Ace drawn) to 64 (4 Kings and a Queen drawn). The range is dynamic based on user input of cards.
+  - After either succeeding in guessing the total value with 5 attempts or not, the game concludes by outputting 3 blocks of text:
+    1. All the cards the user asked for as they were originally returned from the API.
+    2. Those same cards, but now with the Joker(s) replaced if any were found.
+    3. All the newly updated cards, ordered by the criteria requested by the user.
