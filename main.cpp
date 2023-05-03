@@ -31,7 +31,7 @@ using namespace std;
 //		//project, we use multiple different concepts covered within the 
 //		//semester. Inheritence, Polymorphism, Overloaded Operators, 
 //		//Templates, Enums, Vectors, Searching, Sorting, Exception Handling, 
-//		//Dynamic Memory Allocation, Double Pointers, and a Clean UI are all
+//		//Dynamic Memory Allocation, Double Pointers, Maps, and a Clean UI are all
 //		//utilized at one point or another throughout this program. 
 //
 //	//In Minigame 1, aka Easy Mode or GuessingGame, the user has to guess
@@ -44,7 +44,7 @@ using namespace std;
 //		//contains 54 cards instead of the standard 52 in this game, 
 //		//as two jokers are mixed into the bunch. The Minigame class then 
 //		//searches for any Joker in the drawn cards and replaces it if found, 
-//		//otherwise outputs a 'No Jokers Found' message. They the user has
+//		//otherwise outputs a 'No Jokers Found' message. Then the user has
 //		//to guess the total value of all of the cards added together. This
 //		//ranges from  2 (a single Ace drawn) to 64 (4 Kings and a Queen 
 //		//drawn). The range is dynamic based on user input of cards.
@@ -251,7 +251,7 @@ private:
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 
-
+// Also referred to as Mini Game 1; Given actual name to make noticing it easier
 class GuessingGame : public DeckOfCards
 {
 	// Private by default
@@ -263,7 +263,7 @@ public:
 	//Constructor
 	GuessingGame() {}
 
-	// Intro to Easy Mode game
+	// Intro to Easy Mode game; replacing pure virtual
 	void GetRules()
 	{
 		cout << endl << setfill(' ') << setw(34) << right << " [EASY MODE]: " << numCards << " CARD IS DRAWN" << endl
@@ -293,7 +293,6 @@ public:
 		return value;
 	}
 
-	//TODO: MOVE THIS TO GLOBAL FOR MAIN AND BOTH GAMES
 	//Just converts the string number to an int
 	//Defined as static so that it is accessible inside of the CompareValues struct without having to declare an object of this LOTD/MG2 class
 	int GetIndividualCardValue(string cardNum)
@@ -322,7 +321,7 @@ public:
 ///////////////////////////////////////////////////////////////////
 
 
-//Alright! Here we declare the Minigame 2 class, aka Hard Mode, aka LuckOfTheDrawGame
+//Here we declare the Minigame 2 class, aka Hard Mode, aka LuckOfTheDrawGame (named to make more distinctive in code)
 //This contains functions specific to the mechanics of game 2, namely the SearchforJoker() function and 
 //the GetTotalValue() of all cards function
 class LuckOfTheDrawGame : public DeckOfCards
@@ -344,14 +343,14 @@ public:
 		return numCards;
 	}
 
-	// Intro to Hard Mode game
+	// Intro to Hard Mode game; replacing pure virtual
 	void GetRules()
 	{
 		cout << endl << setfill(' ') << setw(34) << right << " [HARD MODE]: " << numCards - 2 << " CARDS ARE DRAWN" << endl
 			<< "" << setfill(' ') << setw(60) << right << "You get 5 attempts to guess the correct card number." << endl << endl;
 	}
 
-	//OutputToVector takes the information that would usually be output to the screen and instead reads it into a string to be read later
+	//OutputToVector takes the information that would usually be output to the screen and instead reads it into a vector to be read later
 	void OutputToVector(const DrawCard& draw)
 	{
 		saveResult.push_back(SuitToString(draw.suit));
@@ -360,7 +359,7 @@ public:
 	}
 
 	//SaveOutput is the function, called in main() via a Hard Mode/Minigame 2 object that saves the cards as they are 
-		//at a given moment into either the map vector savePreJokerResults or savePreSortOutput, based on which bool value is sent in
+		//at a given moment into either map<int,vector<string>> cardResults or savePreJokerResults, based on which bool value is sent in
 	void SaveOutput(bool preJokerOutput)
 	{
 		DrawCard* draw = *Card;
@@ -377,20 +376,24 @@ public:
 		for (int i = 0; i < (numCards - 2); i++)
 		{
 			OutputToVector(*Card[i]);
+
 			// The map<int, vector<string>> receives the data from saveResult vector and places it in index i.
+			// Every loop creates a new vector called from OutputToVector(), places it in cardResults map with a key int,
+			//and deletes it for the next vector loop.
 			cardResults[i] = saveResult;
 
 			saveResult.clear();				// Clears results to add new vector of saveResult to next iteration of cardResults
 			saveResult.shrink_to_fit();		// Frees memory space taken by saveResult
 		}
 
-		// Make a copy if it's the pre-Joker Output then clear to avoid copy for post Joker Output.
+		// Make a copy if it's the PreJoker Output, then clear to avoid copy for next Joker Output.
 		if (preJokerOutput) {
 			savePreJokerResults = cardResults;
 			cardResults.clear();
 		}
 	}
 
+	// This function is where the output of savePreJokerResults and cardResults is looped through and displayed
 	void GetCardResults(bool results)
 	{
 		map<int, vector<string>> getCardResults;
@@ -511,13 +514,13 @@ public:
 	//If the user decides to have the cards sorted by suit or by value, bubble sort will swap cards based on the respective compare object. However, in the case
 	//we're comparing by suits and the two cards being compared have the same suit, the idea was to instead sort just those two cards by value. We also wanted it
 	//to work in the opposite way- if two cards are the same value, ie a Jack and a Jack, we want them sorted by the hierarchy of their suits. So in both compare functions, 
-	//if the values are equal, the other compare struct is called. This caused a problem however because now each compare function in its respecive struct now
+	//if the values are equal, the other compare struct is called. This caused a problem, however, because now each compare function in its respecive struct
 	//technically relied on the other!
 
 //The way this was solved was by declaring each struct piece by piece, so that each struct was aware of the other and could access the function being called without 
-	//the compailer failing to understand where to go. First the conceot of CompareValues is declared, then the definition of CompareSuits, then the definition of 
+	//the compiler failing to understand where to go. First the concept of CompareValues is declared, then the definition of CompareSuits, then the definition of 
 	//CompareValues, then finally the actual code inside of each compare function. This allows the compiler to understand where to go when each function is called
-	//within the other
+	//within the other.
 
 //We want to be careful with the way this is coded now, because an infinite loop is possible if two cards are identical in both value and suit- CompareSuit would call
 	//CompareValue would call CompareSuit would call...
@@ -569,12 +572,14 @@ bool CompareValues::Compare(LuckOfTheDrawGame::DrawCard* c1, LuckOfTheDrawGame::
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 
+
 void GreetMessage();
 void GetValueChart();
 void RunNumberOfTries(int, int);
 int GetRange(int);
 string G2_GetPlayerGuess(int, int);
 void ExitMessage();
+
 
 int main(int argc, char* argv[])
 {
@@ -607,7 +612,7 @@ int main(int argc, char* argv[])
 				cout << endl << "Please Input \"1\" or \"2\"." << endl << endl;
 		}
 
-		// Here we will add the code connecting main to minigame1/easy mode/guessing game
+		// Here we will add the code connecting main to Minigame1 (easy mode; guessing game)
 		if (gameChoice == "1")
 		{
 			// numOfCards defaulted to 1 for Guessing Game. Changes when user is prompted to declare number of cards to draw for Luck Of The Draw Game.
@@ -616,6 +621,8 @@ int main(int argc, char* argv[])
 
 			GuessingGame g1;
 			g1.Connect("deckofcardsapi.com");
+			
+			// Sends in the parameters to the API call for number of cards (defaulted as 1 for this game) and disables the API from bringing in jokers.
 			g1.Get("/api/deck/new/draw", { {"count", to_string(numOfCards)}, {"jokers_enabled", "false"} });
 			g1.GetCardCount(numOfCards);
 
@@ -625,19 +632,21 @@ int main(int argc, char* argv[])
 			// Prints rules of game and level of difficulty
 			g1.GetRules();
 
-			// Loops over game guess attempts 
+			// Function to loop over gameplay guesses for player.
+			// The player has 5 guess attempts and is given hints of too high or too low.
 			RunNumberOfTries(numOfCards, gameValue);
 
 			// Prints the drawn cards info
 			cout << g1 << endl;
 
 		}
-		//JHere, Minigame 2 is triggered
+
+		// This is where Minigame 2 (hard mode; Luck of the Draw game) is triggered instead
 		else
 		{
 			continueGetNumCards = true;
 
-			//this block ensures, using exception handling, that a user enters the proper value. Similar to the function G2_GetPlayerGuess(), see above
+			// This block ensures, using exception handling, that a user enters the proper value (similar to the function G2_GetPlayerGuess())
 			while (continueGetNumCards)
 			{
 				cout << "How Many Cards Would You Like to See? [Enter Number 2-5]: ";
@@ -681,11 +690,11 @@ int main(int argc, char* argv[])
 
 			g2.Connect("deckofcardsapi.com");
 
-			//here we connect to .Get, which is an inherited function from HttpClient, which then calls Data and EndOfData in Deck of Cards, as LOTDG inherits 
-			//publically from both classes
+			//This connects to .Get, which is an inherited function from HttpClient, which then calls Data and EndOfData in Deck of Cards, as LOTDG inherits 
+			//publically from both classes. We set jokers to true so that we can implement the joker search function.
 			g2.Get("/api/deck/new/draw", { {"count", cinNumCardsString}, {"jokers_enabled", "true"} });
 
-			//here we save the cards exactly as they were returned from the API into the first string
+			//here we save the cards exactly as they were returned from the API into the first vector
 			g2.SaveOutput(true);
 
 			cout << endl << left << setfill(' ') << setw(20) << " " << left << setfill('*') << setw(25) << " " << endl << endl;
@@ -694,7 +703,7 @@ int main(int argc, char* argv[])
 			//then we search for and potentially replace the jokers
 			g2.SearchForJoker();
 
-			//now we save the newly updated, potentially now jokerless cards into the second string
+			//now we save the newly updated, potentially now jokerless cards into the second vector
 			g2.SaveOutput(false);
 
 			//here, we save the value of all the cards added together into gameValue
@@ -719,6 +728,7 @@ int main(int argc, char* argv[])
 					cout << endl << "Please Input \"1\" or \"2\"." << endl << endl;
 			}
 			cout << endl;
+
 			//Here Bubblesort is called, using the appropriate comparefunction via templates
 			if (pickSortMethod == "1")
 				g2.BubbleSort<CompareSuits>();
@@ -732,6 +742,7 @@ int main(int argc, char* argv[])
 		}
 
 		//This final block just asks the user if they want to play again, ending if they enter an "x", and continuing otherwise
+		// If they do, they're looped back and given the option again to choose the level of difficulty
 		cout << endl << "Do You Wish to Exit Program? [Enter \"x\" for \'Yes\', Any Other Key for \'No\']: ";
 		getline(cin, exit);
 		pickGame = true;
@@ -739,8 +750,10 @@ int main(int argc, char* argv[])
 			exitProgram = true;
 
 	}
-	ExitMessage();
 
+	// Exit message displayed
+	ExitMessage();
+	return 0;
 };
 
 ////////////////////////////////////////////////////////////////////////
