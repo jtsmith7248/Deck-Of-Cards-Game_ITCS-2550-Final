@@ -79,16 +79,16 @@ string SuitToString(SUITS suit)
 {
 	switch (suit)
 	{
-	case NULLSUIT:
-		return "NULL";
-	case SPADES:
-		return "SPADES";
-	case CLUBS:
-		return "CLUBS";
-	case DIAMONDS:
-		return "DIAMONDS";
-	default:
-		return "HEARTS";
+        case NULLSUIT:
+            return "NULL";
+        case SPADES:
+            return "SPADES";
+        case CLUBS:
+            return "CLUBS";
+        case DIAMONDS:
+            return "DIAMONDS";
+        default:
+            return "HEARTS";
 	}
 }
 
@@ -653,11 +653,12 @@ int main(int argc, char* argv[])
 				try
 				{
 					getline(cin, cinNumCardsString);
-					auto x = cinNumCardsString.find(".");
+					auto decimalLocInInput = cinNumCardsString.find(".");
 
-					if (cin.fail() || stoi(cinNumCardsString) < 2 || stoi(cinNumCardsString) > 5 || cinNumCardsString.find(".") != string::npos) {
+					if (cin.fail() || stoi(cinNumCardsString) < 2 || stoi(cinNumCardsString) > 5 || decimalLocInInput != string::npos) {
 						throw exceptionMessage;
 					}
+                    
 					continueGetNumCards = false;
 				}
 				catch (string s) {
