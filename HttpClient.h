@@ -6,6 +6,8 @@
 #include <string>
 #include <map>
 #include <cstdlib>
+#include <algorithm>
+#include <crtdbg.h>
 
 // Include the "Wininet" library into our project (there are other ways to do this). 
 #pragma comment (lib, "Wininet.lib")
