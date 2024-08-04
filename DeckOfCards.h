@@ -1,3 +1,4 @@
+#pragma once
 #include "HttpClient.h"
 #include "json.hpp"
 #include <iostream>
@@ -100,12 +101,6 @@ public:
 	//UPDATED: Takes in number of cards to draw and sets that to be cardsDealt //Old: Takes in a spot in the index 'count' and returns the Card object at that point
 	virtual void SetCardsDealt(const int count) = 0; //Was: GetCardCount()
 
-
-
-    //START EDITING AGAIN FROM HERE ---------------------------------------------------------------------------------------------------------------------
-
-
-
 	// Uses overloaded insertion "<<" operator in DrawCard struct to stream output of DeckOfCards class
 	friend ostream& operator<<(ostream& osObject, const DeckOfCards& dc) {
 
@@ -151,14 +146,14 @@ protected:
 		auto& results = jp["cards"];
 		//auto count = results.size(); //line for debugging
 		Card = new DrawCard*[results.size()];
-		for (auto& individualCardEntry : results)
+		for (auto& jsonCard : results) //UPDATE: Changed Name of 'individualCardEntry' to the shorter 'jasonCard'
 		{
 			//Dynamic memory allocation
 			DrawCard* newCard = new DrawCard;
 			//Note the StringToSuit() func, explained at top of code
-			newCard->suit = individualCardEntry["suit"].is_null() ? "NULL" : individualCardEntry["suit"];
-			newCard->number = individualCardEntry["value"].is_null() ? "Null" : individualCardEntry["value"];
-			newCard->code = individualCardEntry["code"].is_null() ? "Null" : individualCardEntry["code"];
+			newCard->suit = jsonCard["suit"].is_null() ? "NULL" : jsonCard["suit"];
+			newCard->number = jsonCard["value"].is_null() ? "Null" : jsonCard["value"];
+			newCard->code = jsonCard["code"].is_null() ? "Null" : jsonCard["code"];
 
 			Card[cardsDealt++] = newCard;
 		};
