@@ -9,22 +9,25 @@
 using namespace std;
 using json = nlohmann::json;
 
+
+
 struct DrawCard {
-    uint32_t number;	// API refers to this as "value"
-    string suit;		// [ S(1), C(2), D(3), H(4) ] //UPDATE: Erased SUIT enum, made into string
-    string code;		// For printing purposes -- Ended up not being particularly necessary, but just adds information for the user to see
+	string value;		// API refers to this as "value"
+	string suit;		    // [ S(1), C(2), D(3), H(4) ] //UPDATE: Erased SUIT enum, made into string
+	string code;		// For printing purposes -- Ended up not being particularly necessary, but just adds information for the user to see
 
-    // Overload insertion "<<" operator
-    // When a DrawCard object is output, this func is called
-    friend ostream& operator<<(ostream& osObject, const DrawCard& draw)
-    {
-        osObject << setfill(' ') << setw(2) << left << "Code: "
-            << draw.code << setw(4) << right << "\t"
-            << "Number: " << draw.number << setw(2) << left << "\t"
-            << "Suit: " << draw.suit << setw(2) << left << endl;
+	// Overload insertion "<<" operator
+	// When a DrawCard object is output, this func is called
+	friend ostream& operator<<(ostream& osObject, const DrawCard& draw)
+	{
+		osObject << setfill(' ') << setw(2) << left << "Code: "
+			<< draw.code << setw(4) << right << "\t"
+			<< "Value: " << draw.value << setw(2) << left << "\t"
+			<< "Suit: " << draw.suit << setw(2) << left << endl;
 
-        return osObject;
-    }
+		return osObject;
+	}
+
 };
 
 //DeckOfCards is declared here. This is the main class, and the parent that both minigames inherit off of. It itself inherits from HttpClient, and
@@ -33,27 +36,27 @@ class DeckOfCards : public HttpClient {
 
 private:
 
-    //Two public strings here, each will contain card information. Because at the end of the game three seperate versions of the cards are output to
+	//Two public strings here, each will contain card information. Because at the end of the game three seperate versions of the cards are output to
 		//the user (The cards before the Joker(s) are replaced, the cards after the Joker(s) are replaced, and finally the cards properly sorted),
 		//it is using these strings that we save a snapshot of what those cards looked like at a given time, so that the user can view them later on.
-    //UPDATE: Made private
-    //TODO: Create and use getters and if need be setters
+	//UPDATE: Made private
+	//TODO: Create and use getters and if need be setters
 	string savePreJokerOutput;
 	string savePreSortOutput;
 
-    vector<char> jsonData;
+	vector<char> jsonData;
 	size_t cardsDealt;
 
 protected:
 
-    //UPDATE: Also made protected. Holds all cards drawn 
-    //TODO: Potentially change access status
-    DrawCard** Card;
+	//UPDATE: Also made protected. Holds all cards drawn 
+	//TODO: Potentially change access status
+	DrawCard** Card;
 
 public:
 
 	// Constructor
-	DeckOfCards() : cardsDealt{0} {}
+	DeckOfCards() : cardsDealt{ 0 } {}
 
 	// Destructor, very similar to week 12
 	~DeckOfCards()
@@ -67,44 +70,41 @@ public:
 	// Get and return given DrawCard suit
 	string GetSuits(const int count) {
 
-        if (count < 0 || count >= cardsDealt) {
-            throw "INVALID INDEX"; //TODO: Set up catch statement for when this is called
-        }
+		if (count < 0 || count >= cardsDealt) {
+			throw "INVALID INDEX"; //TODO: Set up catch statement for when this is called
+		}
 
 		return Card[count]->suit;
 	}
 
-	// Get and return given DrawCard number
-	uint32_t GetNumber(const int count) {
+	// Get and return given DrawCard value
+	string GetValue(const int count) {
 
-        if (count < 0 || count >= cardsDealt) {
-            throw "INVALID INDEX"; //TODO: Set up catch statement for when this is called
-        }
+		if (count < 0 || count >= cardsDealt) {
+			throw "INVALID INDEX"; //TODO: Set up catch statement for when this is called
+		}
 
-		return Card[count]->number;
+		return Card[count]->value;
 	}
 
 	//Takes in a spot in the index 'count' and returns the Card object at that point
 	DrawCard* DrawHand(const int count) {
 
-        if (count < 0 || count >= cardsDealt) {
-            throw "INVALID INDEX"; //TODO: Set up catch statement for when this is called
-        }
+		if (count < 0 || count >= cardsDealt) {
+			throw "INVALID INDEX"; //TODO: Set up catch statement for when this is called
+		}
 
 		return Card[count];
 	}
 
-	//UPDATED: Takes in number of cards to draw and sets that to be cardsDealt //Old: Takes in a spot in the index 'count' and returns the Card object at that point
-	virtual void SetCardsDealt(const int count) = 0; //Was: GetCardCount()
-
 	// Uses overloaded insertion "<<" operator in DrawCard struct to stream output of DeckOfCards class
-	friend ostream& operator<<(ostream& osObject, const DeckOfCards& dc) {
+	friend ostream& operator<<(ostream& osObject, const DeckOfCards& dc) { //TODO: see if we should really be printing this here like this
 
 		osObject << setfill('*') << "" << right << setw(46)
-            << " PLAYER CARDS AFTER SORTING: " << setfill('*') << setw(28) << ""
-            << endl << endl << setfill(' ');
+			<< " PLAYER CARDS AFTER SORTING: " << setfill('*') << setw(28) << ""
+			<< endl << endl << setfill(' ');
 
-        //Again, note the 'cardsDealt - 2', as explained in the comments in SaveOutput()
+		//Again, note the 'cardsDealt - 2', as explained in the comments in SaveOutput()
 		for (int i = 0; i < dc.cardsDealt - 2; i++) {
 			osObject << setw(10) << right << 1 + i << ") " << *dc.Card[i] << endl;
 		}
@@ -112,15 +112,16 @@ public:
 		return osObject;
 	}
 
+	//UPDATED: Takes in number of cards to draw and sets that to be cardsDealt //Old: Takes in a spot in the index 'count' and returns the Card object at that point
+	virtual void SetCardsDealt(const int count) = 0; //Was: GetCardCount() //TODO
+
 	// Each *child* class must state their intro mode level with rules
-	virtual void GetRules() = 0;
+	virtual void GetRules() = 0; //TODO
 
 protected:
 
-	void StartofData() {}
-
 	//takes in all the info from DeckOfCards API and fills a vector with each individual char
-	void Data(const char arrData[], const unsigned int iSize)
+	void StartOfData(const char arrData[], const unsigned int iSize)
 	{
 		//json parsed here
 		jsonData.insert(jsonData.end(), arrData, arrData + iSize);
@@ -133,14 +134,14 @@ protected:
 
 		auto& results = jp["cards"];
 		//auto count = results.size(); //line for debugging
-		Card = new DrawCard*[results.size()];
+		Card = new DrawCard * [results.size()];
 		for (auto& jsonCard : results) //UPDATE: Changed Name of 'individualCardEntry' to the shorter 'jasonCard'
 		{
 			//Dynamic memory allocation
 			DrawCard* newCard = new DrawCard;
-			//Note the StringToSuit() func, explained at top of code
+
 			newCard->suit = jsonCard["suit"].is_null() ? "NULL" : jsonCard["suit"];
-			newCard->number = jsonCard["value"].is_null() ? 0 : static_cast<uint32_t>(jsonCard["value"]);
+			newCard->value = jsonCard["value"].is_null() ? "Null" : jsonCard["value"];
 			newCard->code = jsonCard["code"].is_null() ? "Null" : jsonCard["code"];
 
 			Card[cardsDealt++] = newCard;

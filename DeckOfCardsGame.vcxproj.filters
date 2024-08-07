@@ -21,10 +21,10 @@
     <ClInclude Include="json.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\School\ITCS2550_Final_Project\final_project\DeckOfCards.hpp">
+    <ClInclude Include="GuessingGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GuessingGame.hpp">
+    <ClInclude Include="DeckOfCards.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

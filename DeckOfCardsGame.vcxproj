@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="DeckOfCards.h" />
     <ClInclude Include="GuessingGame.h" />
     <ClInclude Include="HttpClient.h" />
     <ClInclude Include="json.hpp" />
