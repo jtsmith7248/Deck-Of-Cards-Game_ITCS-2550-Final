@@ -9,13 +9,9 @@
 using namespace std;
 using json = nlohmann::json;
 
-// Format for Card Number comparisons and for value charts in main()
-map<string, int> CardFaceValues = { {"ACE", 1},{"2", 2},{"3", 3},{"4", 4},{"5", 5},{"6", 6},{"7", 7},{"8", 8},{"9", 9},{"10", 10},{"JACK", 11},{"QUEEN", 12},{"KING", 13} };
-map<string, int> CardSuitValues = { {"Spades", 1},{"Clubs", 2},{"Diamonds", 3},{"Hearts", 4} };
-
 struct DrawCard {
-    string number;		// API refers to this as "value"
-    string suit;		    // [ S(1), C(2), D(3), H(4) ] //UPDATE: Erased SUIT enum, made into string
+    uint32_t number;	// API refers to this as "value"
+    string suit;		// [ S(1), C(2), D(3), H(4) ] //UPDATE: Erased SUIT enum, made into string
     string code;		// For printing purposes -- Ended up not being particularly necessary, but just adds information for the user to see
 
     // Overload insertion "<<" operator
@@ -79,7 +75,7 @@ public:
 	}
 
 	// Get and return given DrawCard number
-	string GetNumber(const int count) {
+	uint32_t GetNumber(const int count) {
 
         if (count < 0 || count >= cardsDealt) {
             throw "INVALID INDEX"; //TODO: Set up catch statement for when this is called
@@ -119,14 +115,6 @@ public:
 	// Each *child* class must state their intro mode level with rules
 	virtual void GetRules() = 0;
 
-	//Just converts the string number to an int
-	//Defined as static so that it is accessible inside of the CompareValues struct without having to declare an object of this LOTD/MG2 class
-	static int GetIndividualCardValue(string cardNum)
-	{
-		auto search = CardFaceValues.find(cardNum);
-		return search->second;
-	}
-
 protected:
 
 	void StartofData() {}
@@ -152,7 +140,7 @@ protected:
 			DrawCard* newCard = new DrawCard;
 			//Note the StringToSuit() func, explained at top of code
 			newCard->suit = jsonCard["suit"].is_null() ? "NULL" : jsonCard["suit"];
-			newCard->number = jsonCard["value"].is_null() ? "Null" : jsonCard["value"];
+			newCard->number = jsonCard["value"].is_null() ? 0 : static_cast<uint32_t>(jsonCard["value"]);
 			newCard->code = jsonCard["code"].is_null() ? "Null" : jsonCard["code"];
 
 			Card[cardsDealt++] = newCard;

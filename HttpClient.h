@@ -47,9 +47,7 @@ public:
 protected:
 
 	// Override this to get the data from the GET method call.
-	virtual void Data(const char* data, const unsigned int size) {}
-
-	virtual void StartOfData() {}
+	virtual void StartOfData(const char* data, const unsigned int size) {}
 	virtual void EndOfData() {}
 
 	int nPort = INTERNET_DEFAULT_HTTPS_PORT;
@@ -154,9 +152,6 @@ public:
 		const int BUFFER_SIZE = 4096;
 		char buffer[BUFFER_SIZE] {};
 
-		// Inform the derived classes
-		StartOfData();
-
 		while (true)
 		{
 			DWORD dwBytesRead;
@@ -173,7 +168,7 @@ public:
 					break;
 
 				// Inform the derived classes
-				Data(buffer, dwBytesRead);
+				StartOfData(buffer, dwBytesRead);
 			}
 		}
 
