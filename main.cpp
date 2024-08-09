@@ -42,14 +42,14 @@ using namespace std;
 //		//King
 //
 //	//In Minigame 2, aka Hard Mode or LuckOfTheDrawGame, the user is asked 
-//		//how many cards they would like to draw, from 1-5. A deck of cards 
+//		//how many cards they would like to draw, from 2-5. A deck of cards 
 //		//contains 54 cards instead of the standard 52 in this game, 
 //		//as two jokers are mixed into the bunch. The Minigame class then 
 //		//searches for any Joker in the drawn cards and replaces it if found, 
 //		//otherwise outputs a 'No Jokers Found' message. Then the user has
 //		//to guess the total value of all of the cards added together. This
-//		//ranges from  2 (a single Ace drawn) to 64 (4 Kings and a Queen 
-//		//drawn). The range is dynamic based on user input of cards.
+//		//ranges from  2 (two Aces drawn) to 64 (4 Kings and a Queen 
+//		//drawn). The range is dynamic based on user input and card distribution.
 //
 //		//After either succeeding in guessing the total value with 5 
 //		//attempts or not, the game concludes by outputting 3 blocks 
@@ -66,16 +66,12 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 //
-////Before reaching the classes and main, we have our global objects that can be called from anywhere. this includes the enum used for the suits, as they need to be
-//	//accessible in multiple areas, the conversion functions that transfer the enum data type back and forth between itself and a string, and finally the function
-//	//G2_GetPlayerGuess(), which takes user input inside of a loop in main, and the code looked cleaner and more understandable when it was outsourced out of main()
+//  Before reaching the classes and main, we have our global objects that can be called from anywhere. this includes the intro and exit messages
+//	to the program and the value chart, which is displayed at each new game played
 
-
-
-
-
-
-
+void GreetMessage();
+void GetValueChart();
+void ExitMessage();
 
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
@@ -83,11 +79,6 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-
-
-void GreetMessage();
-void GetValueChart();
-void ExitMessage();
 
 
 int main(int argc, char* argv[])
@@ -111,15 +102,13 @@ int main(int argc, char* argv[])
 			if (gameChoice == "1" || gameChoice == "2")
 				pickGame = false;
 			else
-				cout << endl << "Please Input \"1\" or \"2\"." << endl << endl;
+				cout << "\n" << "Please Input \"1\" or \"2\"." << "\n\n";
 		}
 
 		// Here we will add the code connecting main to Minigame1 (easy mode; guessing game)
 		if (gameChoice == "1")
 		{
-				//// numOfCards defaulted to 1 for Guessing Game. Changes when user is prompted to declare number of cards to draw for Luck Of The Draw Game.
-				//// Must be declared in this loop to override the player input if they replayed the game and chose mini game 1 instead of 2.
-				//numOfCards = 1;
+			// Num/Cards defaulted to 1 for Guessing Game. Changes when user is prompted to declare number of cards to draw for Luck Of The Draw Game.
 
 			GuessingGame g1;
 			g1.Connect("deckofcardsapi.com");
@@ -143,9 +132,9 @@ int main(int argc, char* argv[])
 		else
 		{
 			bool continueGetNumCards = true;
-			string cinNumCardsString = "";
+			string cinNumCardsString;
 
-			// This block ensures, using exception handling, that a user enters the proper value (similar to the function G2_GetPlayerGuess())
+			// This block ensures, using exception handling, that a user enters the proper value (similar to the function GetPlayerGuess())
 			while (continueGetNumCards)
 			{
 				cout << "How Many Cards Would You Like to See? [Enter Number 2-5]: ";
@@ -162,33 +151,35 @@ int main(int argc, char* argv[])
 					continueGetNumCards = false;
 				}
 				catch (const InvalidEntry&) {
-					cout << "Invalid Entry. Please Enter an Integer in the Given Range." << endl;
+					cout << "\n" << "Invalid Entry. Please Enter an Integer in the Given Range." << "\n\n";
 				}
 				catch (invalid_argument&) {
-					cout << "Invalid Entry. Please Enter an Integer in the Given Range." << endl;
+					cout << "\n" << "Invalid Entry. Please Enter an Integer in the Given Range." << "\n\n";
 				}
 			}
 
-			cout << endl;
+			cout << "\n";
 
 			//here we take the user input for number of cards to be drawn, convert it to an int, 
-				//add 2 to account for the bonus cards, and place that number
+				//add 2 to account for the bonus cards used to replace Jokers if need be, and place that number
 				//into cinNumCardsString. This string is what is sent over to the API
-			uint8_t numCardsDealt = static_cast<uint8_t>(stoi(cinNumCardsString)) + 2;
+			uint16_t numCardsDealt = static_cast<uint16_t>(stoi(cinNumCardsString)) + 2;
 
-			//we send in the updated int value for total number of cards into the LOTDG object
 			LuckOfTheDrawGame g2;
 			g2.Connect("deckofcardsapi.com");
 
-			//This connects to .Get, which is an inherited function from HttpClient, which then calls Data and EndOfData in Deck of Cards, as LOTDG inherits 
-			//publically from both classes. We set jokers to true so that we can implement the joker search function.
+			//This connects to Get(), which is an overiden function from HttpClient. Get() Calls the original function first,
+			//which then calls Data and EndOfData in Deck of Cards, as LOTDG inherits 
+			//publically from both classes. Then, we set its private variable 'numCardsRequested' to be equal to cardsDealt, 
+			// which was calculated in EndOfData()
+			// We set jokers to true so that we can implement the joker search function.
 			g2.Get("/api/deck/new/draw", { {"count", to_string(numCardsDealt)}, {"jokers_enabled", "true"} });
 
 			// Prints rules of game and level of difficulty
 			g2.GetRules();
 
 			//then we search for and potentially replace the jokers
-			g2.SearchForJoker(); //TODO: Ensure functions are properly marked as Private/Public/Protected
+			g2.SearchForJoker();
 
 			//Gets and saves the correct answer, runs the guessing game, and has user pick sorting method
 			g2.RunGame();
@@ -199,11 +190,17 @@ int main(int argc, char* argv[])
 
 		//This final block just asks the user if they want to play again, ending if they enter an "x", and continuing otherwise
 		// If they do, they're looped back and given the option again to choose the level of difficulty
-		cout << endl << "Do You Wish to Exit Program? [Enter \"x\" for \'Yes\', Any Other Key for \'No\']: ";
+		cout << "\n" << "Do You Wish to Exit Program? [Enter \"x\" for \'Yes\', Any Other Key for \'No\']: ";
 		string exit;
 		getline(cin, exit);
+
 		if (exit == "x")
 			exitProgram = true;
+		else {
+			system("cls");
+			GetValueChart();
+		}
+
 	}
 
 	// Exit message displayed
@@ -212,7 +209,7 @@ int main(int argc, char* argv[])
 };
 
 ////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
+//////////////////////    HELPER FUNCTIONS   ///////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -221,10 +218,10 @@ void GreetMessage()
 	// prints the heart, spade, club, and diamond extended ASCII characters
 	string cardSymbols = "\x03  \x04  \x05  \x06  ";
 	string greeting = "   Welcome To The DECK OF CARDS Minigame!    ";
-	cout << setfill('*') << setw(70) << " " << endl;
-	cout << setfill('_') << setw(70) << " " << endl;
-	cout << endl << " " << cardSymbols << greeting << cardSymbols << endl;
-	cout << setw(70) << setfill('_') << " " << endl << endl << endl;
+	cout << setfill('*') << setw(70) << " " << "\n";
+	cout << setfill('_') << setw(70) << " " << "\n";
+	cout << "\n" << " " << cardSymbols << greeting << cardSymbols << "\n";
+	cout << setw(70) << setfill('_') << " " << "\n" << "\n" << "\n";
 	cout << setfill(' ');
 
 	// Print Chart for face (number) values to show player rules of guessing range
@@ -243,15 +240,15 @@ void GetValueChart()
 	string tempSuitVect[4] = { "Spades","Clubs","Diamonds","Hearts" };
 
 	// Print Chart for Number Values
-	cout << setfill('*') << "" << right << setw(46) << " ORDER FOR NUMBER VALUE CHART: " << setfill('*') << setw(17) << "" << endl << endl;
+	cout << setfill('*') << "" << right << setw(46) << " ORDER FOR NUMBER VALUE CHART: " << setfill('*') << setw(17) << "" << "\n" << "\n";
 	for (int i = 0; i < 13; i++)
-		cout << setfill(' ') << setw(30) << right << tempNumVect[i] << " : " << i + 1 << endl;
-	cout << endl;
+		cout << setfill(' ') << setw(30) << right << tempNumVect[i] << " : " << i + 1 << "\n";
+	cout << "\n";
 
 	// Print Chart for Suit Values
-	cout << setfill('*') << "" << right << setw(46) << " ORDER FOR SUIT VALUE CHART: " << setfill('*') << setw(18) << "" << endl << endl;
+	cout << setfill('*') << "" << right << setw(46) << " ORDER FOR SUIT VALUE CHART: " << setfill('*') << setw(18) << "" << "\n" << "\n";
 	for (int i = 0; i < 4; i++)
-		cout << setfill(' ') << setw(30) << right << tempSuitVect[i] << " : " << i + 1 << endl;
+		cout << setfill(' ') << setw(30) << right << tempSuitVect[i] << " : " << i + 1 << "\n";
 	cout << endl;
 }
 
@@ -261,8 +258,8 @@ void ExitMessage()
 {
 	string cardSymbols = "\x03  \x04  \x05  \x06  ";		// prints the heart, spade, club, and diamond extended ASCII characters
 	string exitMessage = "  GAME TERMINATED: Thank you for playing!    ";
-	cout << endl << endl << setfill('_') << setw(70) << right << " " << endl;
-	cout << endl << " " << cardSymbols << exitMessage << cardSymbols << endl;
-	cout << setw(70) << setfill('_') << " " << endl << endl;
-	cout << setw(70) << setfill('*') << " " << endl << endl;
+	cout << "\n" << "\n" << setfill('_') << setw(70) << right << " " << "\n";
+	cout << "\n" << " " << cardSymbols << exitMessage << cardSymbols << "\n";
+	cout << setw(70) << setfill('_') << " " << "\n" << "\n";
+	cout << setw(70) << setfill('*') << " " << "\n" << endl;
 }

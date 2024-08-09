@@ -7,6 +7,9 @@
 #include <map>
 #include <cstdlib>
 
+//CREATED BY PROF. JOHN KOSS OF MACOMB COMMUNITY COLLEGE // FOR USE IN ITCS 2550
+//Extremely Minor Edits by Justin Smith
+
 // Include the "Wininet" library into our project (there are other ways to do this). 
 #pragma comment (lib, "Wininet.lib")
 //////////////////////////////////////
@@ -114,7 +117,7 @@ public:
 
 	/// Invoke an HTTP GET method...
 	/// If there are query parameters then add them so that they look something like: "http://example.com/path?firstname=joe&lastname=blow"
-	bool Get(const std::string uri, const std::map<std::string, std::string> qp = {})
+	virtual bool Get(const std::string uri, const std::map<std::string, std::string> qp = {})
 	{
 		/// Add the query parameters.
 		std::string u = AddQueryParameters(uri, qp);
