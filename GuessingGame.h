@@ -17,25 +17,18 @@ using namespace std;
 class GuessingGame : public DeckOfCards
 {
 	// Private by default
-	int numCards;
 	bool correct;
 
 public:
 
 	//Constructor
-	GuessingGame() {}
+	GuessingGame() : correct{ false } {}
 
 	// Intro to Easy Mode game; replacing pure virtual
 	void GetRules()
 	{
-		cout << endl << setfill(' ') << setw(34) << right << " [EASY MODE]: " << numCards << " CARD IS DRAWN" << endl
-			<< "" << setfill(' ') << setw(60) << right << "You get 5 attempts to guess the correct card value." << endl << endl;
-	}
-
-	// VIRTUAL: Takes in a spot in the index 'count' and returns the Card object at that point
-	int GetCardCount(const int numberOfCards) {
-		numCards = numberOfCards;
-		return numCards;
+		cout << endl << setfill(' ') << setw(34) << right << " [EASY MODE]: " << cardsDealt << " CARD IS DRAWN" << endl
+			<< "" << setfill(' ') << setw(60) << right << "You get 5 attempts to guess the correct card number." << endl << endl;
 	}
 
 	// Draw card at index 1 (default value)
@@ -43,26 +36,46 @@ public:
 		return Card[count];
 	}
 
-	//This function adds together all of the numeric values from the user-requested cards 
-	int GetTotalValue()
+	virtual void RunGame()
 	{
-		int value = 0;
+		uint8_t answer = GetIntValue(0); //TODO: ADD CATCH BLOCK
+		int remainingGuesses = 5;
+		bool guessedCorrectly = false;
+		string loser = " YOU LOST! BETTER LUCK NEXT TIME! ";
+		string winner = " YOU GOT IT RIGHT! ";
+		//this loop takes the users guesses for the total value, ensures they're valid entries using GPG(), and outputs info based on the guess
+		for (int i = 0; i < 5; i++)
+		{
+			//the int containing number of remaining guesses is sent into G2_GPG(), and that function returns a string containing just a number. That num is 
+				//then converted into a string and compared against gameValue
+			int guessValue = GetPlayerGuess(remainingGuesses, 1);
 
-		//to turn it from a string into an int to be added to the total
-		for (int i = 0; i < numCards; i++)
-			value += GetNumber(i);
+			if (guessValue == answer) //gets the int value for card 0, the only card drawn
+			{
+				cout << endl;
+				cout << setfill('*') << "" << right << setw(46) << winner << setfill('*') << setw(28) << "" << endl << endl;
+				cout << setfill(' ') << "The Correct Answer Was " << answer << "!" << endl << endl;
+				guessedCorrectly = true;
+				break;
+			}
+			else if (guessValue > answer)
+				cout << "Too High! Guess Again!" << endl << endl;
+			else
+				cout << "Too Low! Guess Again!" << endl << endl;
 
-		return value;
+			remainingGuesses--;
+		}
+
+		if (!guessedCorrectly)
+		{
+			cout << endl;
+			cout << setfill('*') << "" << right << setw(54) << loser << setfill('*') << setw(20) << "" << endl << endl;
+			cout << setfill(' ') << "The Correct Answer Was " << answer << "!" << endl << endl;
+		}
 	}
 
-
-	// Uses overloaded insertion "<<" operator in DrawCard struct to stream output of DeckOfCards class
-	friend ostream& operator<<(ostream& osObject, const GuessingGame& gg)
-	{
-		// Only has 1 card as option for easy mode
-		osObject << setfill('*') << "" << right << setw(46) << " PLAYER CARD DRAWN: " << setfill('*') << setw(28) << "" << endl << endl;
-		osObject << setfill(' ') << setw(10) << right << "1) " << *gg.Card[0] << endl;
-		return osObject;
+	void PrintResults() {
+		cout << setfill('*') << "" << right << setw(46) << " PLAYER CARD DRAWN: " << setfill('*') << setw(28) << "" << endl << endl;
+		cout << setfill(' ') << setw(10) << right << "1) " << *Card[0] << endl;
 	}
-
 };
