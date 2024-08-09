@@ -139,10 +139,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="DeckOfCards.h" />
+    <ClInclude Include="GuessingGame.h" />
     <ClInclude Include="HttpClient.h" />
     <ClInclude Include="json.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DeckOfCards.cpp" />
+    <ClCompile Include="GuessingGame.cpp" />
+    <ClCompile Include="LuckOfTheDrawGame.cpp" />
+    <ClCompile Include="LuckOfTheDrawGame.h" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

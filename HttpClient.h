@@ -7,6 +7,9 @@
 #include <map>
 #include <cstdlib>
 
+//CREATED BY PROF. JOHN KOSS OF MACOMB COMMUNITY COLLEGE // FOR USE IN ITCS 2550
+//Extremely Minor Edits by Justin Smith
+
 // Include the "Wininet" library into our project (there are other ways to do this). 
 #pragma comment (lib, "Wininet.lib")
 //////////////////////////////////////
@@ -47,9 +50,7 @@ public:
 protected:
 
 	// Override this to get the data from the GET method call.
-	virtual void Data(const char* data, const unsigned int size) {}
-
-	virtual void StartOfData() {}
+	virtual void StartOfData(const char* data, const unsigned int size) {}
 	virtual void EndOfData() {}
 
 	int nPort = INTERNET_DEFAULT_HTTPS_PORT;
@@ -116,7 +117,7 @@ public:
 
 	/// Invoke an HTTP GET method...
 	/// If there are query parameters then add them so that they look something like: "http://example.com/path?firstname=joe&lastname=blow"
-	bool Get(const std::string uri, const std::map<std::string, std::string> qp = {})
+	virtual bool Get(const std::string uri, const std::map<std::string, std::string> qp = {})
 	{
 		/// Add the query parameters.
 		std::string u = AddQueryParameters(uri, qp);
@@ -154,9 +155,6 @@ public:
 		const int BUFFER_SIZE = 4096;
 		char buffer[BUFFER_SIZE] {};
 
-		// Inform the derived classes
-		StartOfData();
-
 		while (true)
 		{
 			DWORD dwBytesRead;
@@ -173,7 +171,7 @@ public:
 					break;
 
 				// Inform the derived classes
-				Data(buffer, dwBytesRead);
+				StartOfData(buffer, dwBytesRead);
 			}
 		}
 
